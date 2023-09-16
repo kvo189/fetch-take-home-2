@@ -17,7 +17,7 @@ export const Layout = ({ title, children, heading }: LayoutProps) => {
     <>
       <Head title={title}></Head>
       
-      <Flex id='search-layout' className='h-screen flex-col items-center justify-center gap-8' bg={useColorModeValue('gray.50', 'gray.800')}>
+      <Flex id='search-layout' className='h-screen flex-col items-center justify-center gap-8 p-4' bg={useColorModeValue('gray.50', 'gray.800')}>
         <h1 className='text-center text-2xl md:text-3xl lg:text-4xl font-semibold'>{heading}</h1>
         {children}
       </Flex>

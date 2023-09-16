@@ -9,8 +9,8 @@ interface LocationData {
 
 // Create the context
 export interface LocationContextType {
-  locationData: LocationData;
-  setLocationData: React.Dispatch<React.SetStateAction<LocationData>>;
+  locationData: LocationData | undefined;
+  setLocationData: React.Dispatch<React.SetStateAction<LocationData | undefined>>;
 }
 
 export const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -30,11 +30,7 @@ interface LocationProviderProps {
 }
 
 export function LocationProvider({ children }: LocationProviderProps) {
-  const [locationData, setLocationData] = useState<LocationData>({
-    city: '',
-    state: '',
-    zipCodes: [],
-  });
+  const [locationData, setLocationData] = useState<LocationData | undefined>(undefined);
 
   return (
      <LocationContext.Provider value={{ locationData, setLocationData }}>

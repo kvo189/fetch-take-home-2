@@ -45,21 +45,42 @@ export interface Coordinates {
 }
 
 
+export interface BoundingBox {
+    top: Coordinates;
+    left: Coordinates;
+    bottom: Coordinates;
+    right: Coordinates;
+}
+
+
 export interface LocationSearchQuery {
     city?: string;
     states?: string[];
-    geoBoundingBox?: {
-        top?: Coordinates;
-        left?: Coordinates;
-        bottom?: Coordinates;
-        right?: Coordinates;
-        bottom_left?: Coordinates;
-        top_left?: Coordinates;
-    };
+    geoBoundingBox?: GeoBoundingBox;
     size?: number; // the number of results to return; defaults to 25 if omitted
     from?: number; // a cursor to be used when paginating results (optional)
 }
 
+// Use a union type for the geoBoundingBox field
+export type GeoBoundingBox = TopLeftBottomRight | BottomLeftTopRight | BottomRightTopLeft;
+
+// Define separate types for each acceptable combination
+export type TopLeftBottomRight = {
+    top: Coordinates;
+    left: Coordinates;
+    bottom: Coordinates;
+    right: Coordinates;
+};
+
+export type BottomLeftTopRight = {
+    bottom_left: Coordinates;
+    top_right: Coordinates;
+};
+
+export type BottomRightTopLeft = {
+    bottom_right: Coordinates;
+    top_left: Coordinates;
+};
 
 // Define the types for the response data
 export interface LocationSearchResult {

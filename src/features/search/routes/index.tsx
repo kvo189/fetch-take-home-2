@@ -9,7 +9,7 @@ export const SearchRoutes = () => {
     <LocationProvider>
       <Routes>
         <Route path='' element={<Locator />} />
-        <Route path='/location' element={<DogSearch />} />
+        <Route path='/dog' element={<DogSearch />} />
       </Routes>
     </LocationProvider>
   );

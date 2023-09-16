@@ -1,64 +1,78 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Input, Select, Button, Box, SimpleGrid, Center, VStack, Text } from '@chakra-ui/react';
-import { Dog, DogSearchQuery } from '../types';
+import { Dog, DogSearchQuery } from '../types/types';
 import { getDogSearchResults, getDogBreeds, searchLocation, getDogsByIds } from '..';
 import { useLocationContext } from '@/context/LocationContext';
 
 export const Layout = () => {
+
+  const initialState = { breeds: [], ageMin: undefined, ageMax: undefined, zipCodes: [] };
   const [breeds, setBreeds] = useState<string[]>([]);
   const [dogs, setDogs] = useState<Dog[]>([]);
-  const [filters, setFilters] = useState<DogSearchQuery>({
-    breeds: undefined,
-    ageMin: undefined,
-    ageMax: undefined,
-  });
+  const [filters, setFilters] = useState<DogSearchQuery>(initialState);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 10,
   });
-  const [sorting, setSorting] = useState('asc');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [cityFilter, setCityFilter] = useState('');
-  const [statesFilter, setStatesFilter] = useState('');
+  const [sorting, setSorting] = useState<'asc' | 'desc'>('asc');
   
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [cityFilter, setCityFilter] = useState<string>('');
+  const [statesFilter, setStatesFilter] = useState<string>('');
+  const [searchCount, setSearchCount] = useState<number>(0);
+
   const { locationData } = useLocationContext();
-
-  const fetchData = async () => {
-    try {
-      const response = await getDogSearchResults({
-        ...filters,
-        size: pagination.pageSize,
-        from: (pagination.currentPage - 1) * pagination.pageSize,
-        sort: `breed:${sorting}`,
-      });
-      const resultIds = response.resultIds; // Fetch details of the dogs by their IDs
-      const dogsResponse = await getDogsByIds(resultIds);
-      setDogs(dogsResponse);
-      console.log('getDogSearchResults response:', response);
-    } catch (error) {
-      console.error('Error fetching dog data:', error);
-    }
-
-    try {
-      // Perform location search
-      const locationSearchQuery = {
-        city: cityFilter,
-        states: statesFilter ? [statesFilter] : undefined,
-        // Add other filters as needed
-      };
-      const locationResponse = await searchLocation(locationSearchQuery);
-      console.log('Location search response:', locationResponse);
-    } catch (error) {
-      console.error('Error fetching location data:', error);
-    }
-  };
 
   const handleSearch = async () => {
     // Trigger dog search when the search button is clicked
     fetchData();
   };
 
-  // Fetch dog breeds when the component mounts
+  const fetchData = useCallback(async () => {
+    if (searchCount > 10 ) return;
+    try {
+      const searchParams = {
+        ...filters,
+        sort: `breed:${sorting}`,
+      };
+      console.log('search params', searchParams)
+      const dogsSearchResponse = await getDogSearchResults(searchParams);
+      const dogsResponse = await getDogsByIds(dogsSearchResponse.resultIds);
+      setDogs(dogsResponse);
+      setSearchCount(searchCount + 1)
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }, [filters, sorting]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, key: keyof DogSearchQuery) => {
+    const value = e.target.type === 'number' ? parseInt(e.target.value, 10) : e.target.value;
+    updateFilters({ [key]: value });
+  };
+
+  const updateFilters = useCallback((newFilters: DogSearchQuery) => {
+    setFilters(prevFilters => ({ ...prevFilters, ...newFilters }));
+  }, []);
+
+  useEffect(() => {
+    if (!locationData) return;
+    const { city, state, zipCodes } = locationData;
+    // Update local states
+    setCityFilter(city);
+    setStatesFilter(state);
+    // Update filters (asynchronous operation)
+    updateFilters({ zipCodes });
+  }, [locationData, updateFilters]);
+
+  useEffect(() => {
+    // Any logic that needs to be run when filters are updated
+    // can be put here, including fetchData.
+    if (filters.zipCodes?.length) {
+      fetchData();
+    }
+  }, [filters, fetchData]);
+
+
   useEffect(() => {
     const fetchBreeds = async () => {
       try {
@@ -72,22 +86,11 @@ export const Layout = () => {
     fetchBreeds();
   }, []);
 
-  useEffect(() => {
-    console.log('Search Layout mounted');
-    const { city, state, zipCodes } = locationData;
-    setCityFilter(city);
-    setStatesFilter(state);
-    setFilters({ ...filters, zipCodes });
-    if (city || state || zipCodes.length) { 
-      fetchData();
-    }
-    console.log({ city, state, zipCodes });
-  }, []);
-
   return (
-    <Box p={4}>
+    <Box id='search-layout' p={4}>
+      <h1 className='text-lg mb-6'>Search count: {searchCount}</h1>
       <VStack spacing={4}>
-        <Input placeholder='Search by breed' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <Input placeholder="Search by breed" value={searchQuery} onChange={e => handleInputChange(e, 'breeds')} />
         <Input
           placeholder='Min Age'
           type='number'
@@ -133,7 +136,7 @@ export const Layout = () => {
             </option>
           ))}
         </Select>
-        <Select value={sorting} onChange={(e) => setSorting(e.target.value)}>
+        <Select value={sorting} onChange={(e) => setSorting(e.target.value as 'asc' | 'desc')}>
           <option value='asc'>Ascending</option>
           <option value='desc'>Descending</option>
         </Select>
