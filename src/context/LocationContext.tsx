@@ -1,10 +1,14 @@
+import { BottomLeftTopRight, Coordinates, Location } from '@/features/search';
 import React, { ReactNode, createContext, useContext, useState} from 'react';
 
 // Define the shape of your location data
 interface LocationData {
   city: string;
   state: string;
+  locations: Location[];
   zipCodes: string[];
+  center: Coordinates;
+  boundingBox: BottomLeftTopRight;
 }
 
 // Create the context

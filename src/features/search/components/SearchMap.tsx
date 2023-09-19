@@ -8,38 +8,44 @@ import { LatLng, LatLngBounds, Map } from 'leaflet';
 interface SearchMapProps {
   locations?: Location[];
   maxDistanceInMiles?: number;
-  center?: { latitude: number; longitude: number };
+  center: { latitude: number; longitude: number };
   onMapChange?: (center: LatLng, bounds: LatLngBounds) => void; // new prop
 }
 
 const SearchMap: React.FC<SearchMapProps> = ({ locations = [], maxDistanceInMiles = 100, center, onMapChange }) => {
   let filteredLocations = locations;
   const [map, setMap] = useState<Map | null>(null);
-  const [position, setPosition] = useState(() => map && map.getCenter());
-  const [bounds, setBounds] = useState(() => map && map.getBounds());
+  // const [position, setPosition] = useState(() => map && map.getCenter());
+  // const [bounds, setBounds] = useState(() => map && map.getBounds());
 
   useEffect(() => {
     if (!map || !onMapChange) return;
     const bounds: LatLngBounds = map.getBounds();
     onMapChange(map.getCenter(), bounds);
   }, [map]);
-  
-  const onMoveEnd = useCallback(() => {
-    if (!map || !onMapChange) return;
-    const newCenter = map.getCenter();
-    const newBounds = map.getBounds();
-    setPosition(newCenter);
-    setBounds(newBounds);
-    onMapChange(newCenter, newBounds);
-  }, [map, onMapChange]);
-  
+
+  // const onMoveEnd = useCallback(() => {
+  //   if (!map || !onMapChange) return;
+  //   const newCenter = map.getCenter();
+  //   const newBounds = map.getBounds();
+  //   // setPosition(newCenter);
+  //   setBounds(newBounds);
+  //   onMapChange(newCenter, newBounds);
+  // }, [map, onMapChange]);
+
+  // useEffect(() => {
+  //   if (!map || !onMapChange) return;
+  //   map.on('moveend', onMoveEnd);
+  //   return () => {
+  //     map.off('moveend', onMoveEnd);
+  //   };
+  // }, [map, onMoveEnd, onMapChange]);
+
   useEffect(() => {
-    if (!map || !onMapChange) return;
-    map.on('moveend', onMoveEnd);
-    return () => {
-      map.off('moveend', onMoveEnd);
-    };
-  }, [map, onMoveEnd, onMapChange]);
+    if (!map) return;
+    map.setView([center.latitude, center.longitude], 13);
+    console.log('center changed', center);
+  }, [center, map]);
 
   if (locations?.length && center) {
     filteredLocations = locations.filter((location) => isWithinDistance(center, location, maxDistanceInMiles));
@@ -47,7 +53,7 @@ const SearchMap: React.FC<SearchMapProps> = ({ locations = [], maxDistanceInMile
 
   return (
     <div className='w-full relative'>
-      <div className='absolute m-auto left-0 right-0'>{bounds ? bounds.getNorth() : ''}</div>
+      {/* <div className='absolute m-auto left-0 right-0'>{bounds ? bounds.getNorth() : ''}</div> */}
       <MapContainer
         center={center ? [center.latitude, center.longitude] : undefined}
         zoom={13}

@@ -1,11 +1,24 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select, Button, Box, SimpleGrid, Center, VStack, Text } from '@chakra-ui/react';
+import {
+  Input,
+  Select,
+  Button,
+  Box,
+  SimpleGrid,
+  Center,
+  VStack,
+  Text,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+} from '@chakra-ui/react';
 import { Dog, DogSearchQuery } from '../types/types';
 import { getDogSearchResults, getDogBreeds, searchLocation, getDogsByIds } from '..';
 import { useLocationContext } from '@/context/LocationContext';
+import { Slider } from '../components/Slider';
+import ReactSlider from 'react-slider';
 
 export const Layout = () => {
-
   const initialState = { breeds: [], ageMin: undefined, ageMax: undefined, zipCodes: [] };
   const [breeds, setBreeds] = useState<string[]>([]);
   const [dogs, setDogs] = useState<Dog[]>([]);
@@ -15,8 +28,6 @@ export const Layout = () => {
     pageSize: 10,
   });
   const [sorting, setSorting] = useState<'asc' | 'desc'>('asc');
-  
-  const [searchQuery, setSearchQuery] = useState<string>('');
   const [cityFilter, setCityFilter] = useState<string>('');
   const [statesFilter, setStatesFilter] = useState<string>('');
   const [searchCount, setSearchCount] = useState<number>(0);
@@ -29,29 +40,27 @@ export const Layout = () => {
   };
 
   const fetchData = useCallback(async () => {
-    if (searchCount > 10 ) return;
+    if (searchCount > 10) return;
     try {
-      const searchParams = {
+      const searchParams: DogSearchQuery = {
         ...filters,
+        breeds: filters.breeds?.filter((breed) => breed !== '') || undefined,
+        zipCodes: filters.zipCodes?.filter((zip) => zip !== '') || undefined,
         sort: `breed:${sorting}`,
       };
-      console.log('search params', searchParams)
+
       const dogsSearchResponse = await getDogSearchResults(searchParams);
+      console.log('search params', searchParams, dogsSearchResponse.total);
       const dogsResponse = await getDogsByIds(dogsSearchResponse.resultIds);
       setDogs(dogsResponse);
-      setSearchCount(searchCount + 1)
+      setSearchCount(searchCount + 1);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   }, [filters, sorting]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, key: keyof DogSearchQuery) => {
-    const value = e.target.type === 'number' ? parseInt(e.target.value, 10) : e.target.value;
-    updateFilters({ [key]: value });
-  };
-
   const updateFilters = useCallback((newFilters: DogSearchQuery) => {
-    setFilters(prevFilters => ({ ...prevFilters, ...newFilters }));
+    setFilters((prevFilters) => ({ ...prevFilters, ...newFilters }));
   }, []);
 
   useEffect(() => {
@@ -72,7 +81,6 @@ export const Layout = () => {
     }
   }, [filters, fetchData]);
 
-
   useEffect(() => {
     const fetchBreeds = async () => {
       try {
@@ -86,47 +94,31 @@ export const Layout = () => {
     fetchBreeds();
   }, []);
 
+  const handleSliderChange = (value: number[]) => {
+    setFilters({
+      ...filters,
+      ageMin: value[0],
+      ageMax: value[1],
+    });
+  };
+
   return (
     <Box id='search-layout' p={4}>
-      <h1 className='text-lg mb-6'>Search count: {searchCount}</h1>
+      <h1 className='text-lg'>Search count: {searchCount}</h1>
+      <Slider className='py-6' min={0} max={15} onChange={(value) => handleSliderChange(value)}></Slider>
       <VStack spacing={4}>
-        <Input placeholder="Search by breed" value={searchQuery} onChange={e => handleInputChange(e, 'breeds')} />
-        <Input
-          placeholder='Min Age'
-          type='number'
-          value={filters.ageMin || ''}
-          onChange={(e) =>
-            setFilters({
-              ...filters,
-              ageMin: parseInt(e.target.value, 10) || undefined,
-            })
-          }
-        />
-        <Input
-          placeholder='Max Age'
-          type='number'
-          value={filters.ageMax || ''}
-          onChange={(e) =>
-            setFilters({
-              ...filters,
-              ageMax: parseInt(e.target.value, 10) || undefined,
-            })
-          }
-        />
         <Input placeholder='City' value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} />
         <Input placeholder='State' value={statesFilter} onChange={(e) => setStatesFilter(e.target.value)} />
         <Input
           maxLength={5}
           placeholder='Zip Codes (comma-separated)'
-          value={filters.zipCodes || ''}
+          value={filters.zipCodes || undefined}
           onChange={(e) => setFilters({ ...filters, zipCodes: e.target.value.split(',') })}
         />
         <Select
           placeholder='All breeds'
           value={filters.breeds && filters.breeds[0] ? filters.breeds[0] : ''}
           onChange={(e) => {
-            const selectedValue = e.target.value;
-            console.log('Selected value:', selectedValue);
             setFilters({ ...filters, breeds: [e.target.value] });
           }}
         >
@@ -149,9 +141,10 @@ export const Layout = () => {
             <Center>
               <img src={dog.img} alt={dog.name} width='100' height='100' />
             </Center>
-            <Text>{dog.name}</Text>
+            <Text className='font-bold'>{dog.name}</Text>
             <Text>{dog.breed}</Text>
             <Text>{dog.age} years old</Text>
+            <Text>Zip code: {dog.zip_code}</Text>
           </Box>
         ))}
       </SimpleGrid>
