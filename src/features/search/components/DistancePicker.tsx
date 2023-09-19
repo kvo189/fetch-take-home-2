@@ -1,21 +1,16 @@
 import { ChangeEvent } from 'react';
-import { Select} from '@chakra-ui/react';
+import { Select } from '@chakra-ui/react';
+import { StateAbbreviation } from '../types/StateAbbreviation';
 
 interface DistancePickerProps {
   selectedDistance: number;
   onDistanceChange: (selectedDistance: number) => void;
+  className?: string;
+  selectedState?: StateAbbreviation;
 }
 
-export const DistancePicker = ({ selectedDistance, onDistanceChange }: DistancePickerProps) => {
-  const distances: number[] = [
-    10,
-    20,
-    30,
-    40,
-    50,
-    75,
-    100,
-  ];
+export const DistancePicker = ({ selectedDistance, onDistanceChange, className, selectedState }: DistancePickerProps) => {
+  const distances: number[] = [0, 2, 4, 6, 8, 10, 15, 20];
 
   const defaultSelectedState = selectedDistance || distances[0];
 
@@ -25,12 +20,17 @@ export const DistancePicker = ({ selectedDistance, onDistanceChange }: DistanceP
   };
 
   return (
-    <Select background={'white'} value={defaultSelectedState} onChange={handleDistanceChange}>
-      {distances.map((dist) => (
-        <option key={dist} value={dist}>
-          {dist} miles
-        </option>
-      ))}
-    </Select>
+    <div className={`${className}`}>
+      <label className='font-semibold' htmlFor='select-distance'>
+        Search within
+      </label>
+      <Select id="select-distance" background={'white'} value={defaultSelectedState} onChange={handleDistanceChange}>
+        {distances.map((dist) => (
+          <option key={dist} value={dist}>
+            {dist === 0 ? 'All distances' : `${dist} miles`}
+          </option>
+        ))}
+      </Select>
+    </div>
   );
 };

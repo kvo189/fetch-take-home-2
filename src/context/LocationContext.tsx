@@ -1,14 +1,16 @@
 import { BottomLeftTopRight, Coordinates, Location } from '@/features/search';
+import { StateAbbreviation } from '@/features/search/types/StateAbbreviation';
 import React, { ReactNode, createContext, useContext, useState} from 'react';
 
 // Define the shape of your location data
 interface LocationData {
   city: string;
-  state: string;
+  state: StateAbbreviation;
   locations: Location[];
-  zipCodes: string[];
+  zipCodes: string[] | undefined;
   center: Coordinates;
   boundingBox: BottomLeftTopRight;
+  searchDistance: number;
 }
 
 // Create the context

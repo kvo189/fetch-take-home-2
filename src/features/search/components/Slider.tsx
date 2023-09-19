@@ -1,27 +1,20 @@
-import { useRef, useState } from 'react';
+import React from 'react';
 import ReactSlider from 'react-slider';
 
 interface SliderProps {
   min: number;
   max: number;
-  value?: number;
-  onChange: (value: number[]) => void;
+  selectedValues: [number, number];
+  handleSliderChange: (value: number[]) => void;
   className?: string;
 }
 
-export const Slider = ({ min, max, onChange, className }: SliderProps) => {
-  const [sliderValue, setSliderValue] = useState([min, max]); // initial min and max values
-  const sliderRef = useRef<HTMLDivElement>(null);
+const Slider = ({ handleSliderChange, min, max, className, selectedValues }: SliderProps) => {
 
-  const handleSliderChange = (value: number[]) => {
-    setSliderValue(value);
-    onChange(value);
-  };
   const renderTrack = (props: any, state: { index: number; value: number[] }): JSX.Element => {
     let trackStyle: React.CSSProperties = props.style;
     const trackRadius = '4px';
     if (typeof trackStyle.left === 'number' && typeof trackStyle.right === 'number') {
-      // trackStyle = { ...trackStyle, left: trackStyle.left + 8, right: trackStyle.right + 4 };
     }
     if (state.index === 0) {
       trackStyle = { ...trackStyle, borderTopLeftRadius: trackRadius, borderBottomLeftRadius: trackRadius };
@@ -47,9 +40,9 @@ export const Slider = ({ min, max, onChange, className }: SliderProps) => {
     return <div {...props} style={style} />;
   };
   return (
-    <div className={`relative ${className}`} ref={sliderRef}>
+    <div className={`relative ${className}`} >
       <div className='text-center w-full py-1 blue'>
-        Age: {sliderValue[0]} - {sliderValue[1]}
+        Age: {selectedValues[0]} - {selectedValues[1]}
       </div>
       <div className='py-1'>
         <ReactSlider
@@ -61,8 +54,8 @@ export const Slider = ({ min, max, onChange, className }: SliderProps) => {
           renderTrack={renderTrack}
           renderThumb={renderThumb}
           renderMark={renderMark}
-          value={sliderValue}
-          onChange={(value) => handleSliderChange(value)}
+          value={selectedValues}
+          onChange={handleSliderChange}
           min={min}
           max={max}
           pearling={false}
@@ -72,3 +65,4 @@ export const Slider = ({ min, max, onChange, className }: SliderProps) => {
     </div>
   );
 };
+export default Slider;

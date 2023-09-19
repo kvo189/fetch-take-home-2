@@ -1,8 +1,8 @@
 import { Box, ListItem, UnorderedList } from '@chakra-ui/react';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef } from 'react';
 
 // Handle click outside dropdown logic
-const useHandleClickOutside = (ref: any, handler: Function) => {
+const useHandleClickOutside = (ref: React.RefObject<HTMLElement>, handler: () => void) => {
   useEffect(() => {
     const handleClickOutside = (event: { target: any }) => {
       if (ref.current && !ref.current.contains(event.target)) {
@@ -23,7 +23,7 @@ interface InputSuggestionDropdownProps {
   setShowDropdown: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const InputSuggestionsDropdown = ({ suggestions, onSelect, showDropdown, setShowDropdown }: InputSuggestionDropdownProps) => {
+const InputSuggestionsDropdown = ({ suggestions, onSelect, showDropdown, setShowDropdown }: InputSuggestionDropdownProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useHandleClickOutside(dropdownRef, () => setShowDropdown(false));
@@ -57,3 +57,5 @@ export const InputSuggestionsDropdown = ({ suggestions, onSelect, showDropdown, 
     </Box>
   );
 };
+
+export default memo(InputSuggestionsDropdown);

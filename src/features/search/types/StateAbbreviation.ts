@@ -1,5 +1,6 @@
 // StateAbbreviations.ts
 export type StateAbbreviation =
+  | ''
   | 'AL'
   | 'AK'
   | 'AZ'
