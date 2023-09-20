@@ -38,13 +38,11 @@ const Locator = () => {
               className='flex-1'
               selectedDistance={searchDistance}
               onDistanceChange={(d) => setSearchDistance(d)}
-              selectedState={selectedState}
             />
             <StatePicker
               className='flex-1'
               selectedState={selectedState}
               onStateChange={(newState) => setSelectedState(newState)}
-              selectedDistance={searchDistance}
             />
             <LocationSearchInput selectedState={selectedState} searchDistance={searchDistance} />
           </div>

@@ -6,10 +6,9 @@ interface DistancePickerProps {
   selectedDistance: number;
   onDistanceChange: (selectedDistance: number) => void;
   className?: string;
-  selectedState?: StateAbbreviation;
 }
 
-export const DistancePicker = ({ selectedDistance, onDistanceChange, className, selectedState }: DistancePickerProps) => {
+export const DistancePicker = ({ selectedDistance, onDistanceChange, className }: DistancePickerProps) => {
   const distances: number[] = [0, 2, 4, 6, 8, 10, 15, 20];
 
   const defaultSelectedState = selectedDistance || distances[0];

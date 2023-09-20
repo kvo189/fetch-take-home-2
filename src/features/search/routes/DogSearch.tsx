@@ -1,5 +1,5 @@
 import { Layout } from '../components/Layout';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Select, Button, Box, SimpleGrid, Center, VStack, Text, Image, AspectRatio, filter } from '@chakra-ui/react';
 import { Dog, DogSearchQuery } from '../types/types';
 import { getDogSearchResults, getDogBreeds, getDogsByIds } from '..';
@@ -10,6 +10,7 @@ import { StateAbbreviation } from '../types/StateAbbreviation';
 import { DistancePicker } from '../components/DistancePicker';
 import LocationSearchInput from '../components/LocationSearchInput';
 import { SearchDrawer } from '../components/SearchDrawer';
+import { calculatePageEndIndex } from '../utils/calculatePageEndIndex';
 
 interface FilterProps {
   searchCount: number;
@@ -28,120 +29,102 @@ interface FilterProps {
 
 export const DogSearch = () => {
   const [selectedState, setSelectedState] = useState<StateAbbreviation>('AL');
-  const [searchDistance, setSearchDistance] = useState<number>(10); // Search distance in miles
-  const { locationData, setLocationData } = useLocationContext();
+  const [searchDistance, setSearchDistance] = useState<number>(10);
+  const { locationData } = useLocationContext();
   const [breeds, setBreeds] = useState<string[]>([]);
   const [dogs, setDogs] = useState<Dog[]>([]);
-  const [filters, setFilters] = useState<DogSearchQuery>({ breeds: [], ageMin: undefined, ageMax: undefined, zipCodes: [] });
-  const [currentPage, setCurrentPage] = useState<number>(0); // Pagination
-  const [pagination, setPagination] = useState({
-    currentPageResults: 0,
-    pageSize: 25,
-    totalPage: 0,
-    total: 0,
-  });
+  const [filters, setFilters] = useState<DogSearchQuery>({ breeds: [], ageMin: undefined, ageMax: undefined });
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [pagination, setPagination] = useState({ currentPageResults: 0, pageSize: 25, totalPage: 0, totalResults: 0 });
   const [sorting, setSorting] = useState<'asc' | 'desc'>('asc');
   const [searchCount, setSearchCount] = useState<number>(0);
 
-  const handleSearch = async () => {
-    fetchData(); // Trigger dog search when the search button is clicked
-  };
+  useEffect(() => {
+    console.log(currentPage, 'changed page', pagination, 'pagination');
+  }, [currentPage, pagination]);
 
   const fetchData = useCallback(async () => {
-    // if (searchCount > 10) return;
     try {
       const searchParams: DogSearchQuery = {
         ...filters,
-        breeds: filters.breeds?.filter((breed) => breed !== '') || undefined,
-        zipCodes: filters.zipCodes?.filter((zip) => zip !== '') || undefined,
+        breeds: filters.breeds?.filter(Boolean) || undefined,
+        zipCodes: locationData?.zipCodes,
         sort: `breed:${sorting}`,
         from: currentPage * pagination.pageSize,
         size: pagination.pageSize,
       };
-      console.log('search params', searchParams);
+
+      console.log('fetching data with params...', searchParams);
 
       const dogsSearchResponse = await getDogSearchResults(searchParams);
       const dogsResponse = await getDogsByIds(dogsSearchResponse.resultIds);
       setDogs(dogsResponse);
-      setSearchCount(searchCount + 1);
-      setPagination({
-        ...pagination,
+      setSearchCount((prevCount) => prevCount + 1);
+      setPagination((prevPagination) => ({
+        ...prevPagination,
         currentPageResults: dogsSearchResponse.resultIds.length,
-        total: dogsSearchResponse.total,
-        totalPage: Math.ceil(dogsSearchResponse.total / pagination.pageSize),
-      });
+        totalResults: dogsSearchResponse.total,
+        totalPage: Math.ceil(dogsSearchResponse.total / prevPagination.pageSize),
+      }));
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  }, [filters, sorting, currentPage]);
+  }, [filters, sorting, currentPage, locationData]);
 
-  const updateFilters = useCallback((newFilters: DogSearchQuery) => {
-    console.log('updating filters')
-    setFilters((prevFilters) => ({ ...prevFilters, ...newFilters }));
-  }, []);
-
-  useEffect(() => {
-    const newFilters = {
-      ...filters,
-      zipCodes: locationData?.zipCodes,
-    };
-    console.log(newFilters);
-    setCurrentPage(0); // Reset pagination
-    updateFilters(newFilters); // Update filters (asynchronous operation)
-  }, [locationData, updateFilters, filters.breeds, filters.ageMin, filters.ageMax, sorting]);
+  const handleSearch = useCallback(() => {
+    fetchData();
+  }, [fetchData]);
 
   useEffect(() => {
-    const fetchBreeds = async () => {
+    console.log('A parameter affecting the search has changed.', {
+      locationData,
+      currentPage,
+      sorting,
+      ageMin: filters.ageMin,
+      ageMax: filters.ageMax,
+      breeds: filters.breeds,
+    });
+
+    fetchData();
+  }, [locationData, currentPage, sorting, filters.ageMin, filters.ageMax, filters.breeds]);
+
+  useEffect(() => {
+    (async () => {
       try {
         const response = await getDogBreeds();
         setBreeds(response);
       } catch (error) {
         console.error('Error fetching dog breeds:', error);
       }
-    };
-
-    fetchBreeds();
-
+    })();
     if (locationData) {
+      console.log('init dog search with locatioDATA...', locationData);
       setSelectedState(locationData.state);
       setSearchDistance(locationData.searchDistance);
-      fetchData();
     }
   }, []);
 
-  const handleSliderChange = (value: number[]) => {
-    updateFilters({ ageMin: value[0], ageMax: value[1] });
-  };
+  const handleSliderChange = useCallback((value: number[]) => {
+    setFilters((prevFilters) => ({ ...prevFilters, ageMin: value[0], ageMax: value[1] }));
+  }, []);
 
-  const filterProps: FilterProps = {
-    searchCount,
-    selectedState,
-    setSelectedState,
-    searchDistance,
-    setSearchDistance,
-    filters,
-    setFilters,
-    breeds,
-    sorting,
-    setSorting,
-    handleSliderChange,
-    handleSearch,
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, [currentPage]);
-
-
-  const handlePrevPage = () => {
-    if (currentPage <= 0 ) return;
-    setCurrentPage(currentPage - 1);
-  }
-
-  const handleNextPage = () => {
-    if (currentPage === pagination.totalPage) return;
-    setCurrentPage(currentPage + 1);
-  }
+  const filterProps = useMemo(
+    () => ({
+      searchCount,
+      selectedState,
+      setSelectedState,
+      searchDistance,
+      setSearchDistance,
+      filters,
+      setFilters,
+      breeds,
+      sorting,
+      setSorting,
+      handleSliderChange,
+      handleSearch,
+    }),
+    [searchCount, selectedState, searchDistance, filters, breeds, sorting, handleSliderChange, handleSearch]
+  );
 
   return (
     <Box id='div-dog-search-container' className='w-full flex flex-col lg:flex-row mx-auto gap-3 p-4'>
@@ -153,27 +136,46 @@ export const DogSearch = () => {
       ></SearchDrawer>
 
       <div className='flex flex-col w-full gap-4'>
-        {(pagination.total && (
-          <div className='flex justify-between items-center w-100'>
+        {(pagination.totalResults && (
+          <div className='flex flex-col sm:flex-row gap-3 justify-center md:justify-between items-center w-100'>
             <div className=''>
-              Showing {currentPage + 1} - {pagination.currentPageResults} of {pagination.total}{' '}
+              Showing {pagination.pageSize * currentPage + 1} -{' '}
+              {calculatePageEndIndex(currentPage, pagination.pageSize, pagination.totalResults)} of {pagination.totalResults}{' '}
               available dogs
             </div>
             <div className='flex gap-4'>
-              <Button onClick={handlePrevPage}>Prev</Button>
-              <Select placeholder={`${currentPage + 1}/${pagination.totalPage}`}>
-                <option value='option1'>Option 1</option>
-                <option value='option2'>Option 2</option>
-                <option value='option3'>Option 3</option>
+              <Button onClick={() => currentPage > 0 && setCurrentPage((page) => page - 1)}>Prev</Button>
+
+              <Select
+                value={currentPage + 1}
+                onChange={(e) => {
+                  const selectedPage = parseInt(e.target.value);
+                  if (!isNaN(selectedPage)) {
+                    setCurrentPage(selectedPage - 1);
+                  }
+                }}
+              >
+                {Array.from({ length: pagination.totalPage }, (_, index) => index + 1).map((pageNum) => (
+                  <option key={pageNum} value={pageNum}>
+                    {pageNum}
+                  </option>
+                ))}
               </Select>
-              <Button onClick={handleNextPage}>Next</Button>
+
+              <Button onClick={() => currentPage + 1 < pagination.totalPage && setCurrentPage((page) => page + 1)}>
+                Next
+              </Button>
+            </div>
+
+            <div className='hidden sm:block px-2'>
+              Page: {currentPage + 1}/{pagination.totalPage}
             </div>
           </div>
         )) ||
           ''}
-        <SimpleGrid minChildWidth='200px' width={'100%'} spacing={6}>
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4, xl: 5, '2xl': 6 }} width={'100%'} spacing={6}>
           {dogs.map((dog) => (
-            <Box key={dog.id} borderWidth='1px' borderRadius='lg' boxShadow='base' maxWidth={'200px'}>
+            <Box key={dog.id} borderWidth='1px' borderRadius='lg' boxShadow='base'>
               <Center>
                 <Box width='100%'>
                   <AspectRatio ratio={1}>
@@ -219,15 +221,10 @@ const FiltersContent: React.FC<{ filterProps: FilterProps }> = ({ filterProps })
   return (
     <div id='div-filters-container' className='flex flex-col w-full gap-2'>
       <h1 className='text-lg'>Search count: {searchCount}</h1>
-      <DistancePicker
-        selectedDistance={searchDistance}
-        onDistanceChange={(d: number) => setSearchDistance(d)}
-        selectedState={selectedState}
-      />
+      <DistancePicker selectedDistance={searchDistance} onDistanceChange={(d: number) => setSearchDistance(d)} />
       <StatePicker
         selectedState={selectedState}
         onStateChange={(newState: StateAbbreviation) => setSelectedState(newState)}
-        selectedDistance={searchDistance}
       />
       <LocationSearchInput selectedState={selectedState} searchDistance={searchDistance} />
       <div id='div-breed-select-container' className='w-full'>

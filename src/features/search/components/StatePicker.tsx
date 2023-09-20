@@ -6,10 +6,9 @@ interface StatePickerProps {
   selectedState: StateAbbreviation;
   onStateChange: (selectedState: StateAbbreviation) => void;
   className?: string;
-  selectedDistance?: number;
 }
 
-export const StatePicker = ({ selectedState, onStateChange, className, selectedDistance }: StatePickerProps) => {
+export const StatePicker = ({ selectedState, onStateChange, className  }: StatePickerProps) => {
   const defaultSelectedState = selectedState || states[0];
 
   const handleStateChange = (e: ChangeEvent<HTMLSelectElement>) => {

@@ -1,4 +1,5 @@
-import React from 'react';
+import { useDebounce } from '@uidotdev/usehooks';
+import React, { useEffect } from 'react';
 import ReactSlider from 'react-slider';
 
 interface SliderProps {
@@ -40,7 +41,7 @@ const Slider = ({ handleSliderChange, min, max, className, selectedValues }: Sli
     return <div {...props} style={style} />;
   };
   return (
-    <div className={`relative ${className}`} >
+    <div className={`relative ${className}`}>
       <div className='text-center w-full py-1 blue'>
         Age: {selectedValues[0]} - {selectedValues[1]}
       </div>
@@ -55,7 +56,7 @@ const Slider = ({ handleSliderChange, min, max, className, selectedValues }: Sli
           renderThumb={renderThumb}
           renderMark={renderMark}
           value={selectedValues}
-          onChange={handleSliderChange}
+          onAfterChange={handleSliderChange}
           min={min}
           max={max}
           pearling={false}
