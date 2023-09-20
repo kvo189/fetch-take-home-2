@@ -17,6 +17,8 @@ interface LocationData {
 export interface LocationContextType {
   locationData: LocationData | undefined;
   setLocationData: React.Dispatch<React.SetStateAction<LocationData | undefined>>;
+  selectedLocation: Location | undefined | null;
+  setSelectedLocation: React.Dispatch<React.SetStateAction<Location | undefined | null>>;
 }
 
 export const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -37,9 +39,10 @@ interface LocationProviderProps {
 
 export function LocationProvider({ children }: LocationProviderProps) {
   const [locationData, setLocationData] = useState<LocationData | undefined>(undefined);
+  const [selectedLocation, setSelectedLocation] = useState<Location | undefined | null>(undefined);
 
   return (
-     <LocationContext.Provider value={{ locationData, setLocationData }}>
+     <LocationContext.Provider value={{ locationData, setLocationData, selectedLocation, setSelectedLocation }}>
        {children}
     </LocationContext.Provider>
   );

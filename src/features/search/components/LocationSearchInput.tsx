@@ -25,10 +25,13 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
   const [foundLocations, setFoundLocations] = useState<any[]>([]);
   const [suggestedCities, setSuggestedCities] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  // const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const { locationData, setLocationData } = useLocationContext();
+  const { selectedLocation, setSelectedLocation } = useLocationContext();
   const [shouldHideDropdown, setShouldHideDropdown] = useState<boolean>(false);
   const isMount = useIsMount();
+
+  console.log('search dist', searchDistance)
 
   useEffect(() => {
     if (locationData?.city) {
@@ -54,7 +57,7 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
       return;
     }
 
-    if (selectedLocation) {
+    if (selectedLocation && !isMount) {
       const boundingBox = getBoundingBox(
         { lat: selectedLocation.latitude, lon: selectedLocation.longitude },
         searchDistance
@@ -83,7 +86,7 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
     setFoundLocations([]);
     setSuggestedCities([]);
     setShowDropdown(false);
-    // setSelectedLocation(null);
+    setSelectedLocation(null);
   }, [selectedState]);
 
   const handleCitySearch = () => {

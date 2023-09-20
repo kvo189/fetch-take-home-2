@@ -1,6 +1,5 @@
 import { ChangeEvent } from 'react';
 import { Select } from '@chakra-ui/react';
-import { StateAbbreviation } from '../types/StateAbbreviation';
 
 interface DistancePickerProps {
   selectedDistance: number;

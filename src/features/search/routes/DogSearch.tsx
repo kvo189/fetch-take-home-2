@@ -205,6 +205,7 @@ export const DogSearch = () => {
 };
 
 const FiltersContent: React.FC<{ filterProps: FilterProps }> = ({ filterProps }) => {
+  const { selectedLocation } = useLocationContext();
   const {
     searchCount,
     selectedState,
@@ -220,7 +221,8 @@ const FiltersContent: React.FC<{ filterProps: FilterProps }> = ({ filterProps })
   } = filterProps;
   return (
     <div id='div-filters-container' className='flex flex-col w-full gap-2'>
-      <h1 className='text-lg'>Search count: {searchCount}</h1>
+      <p className='text-lg'>Search count: {searchCount}</p>
+      <p className='text-lg'>Selected location: {selectedLocation ? `${selectedLocation.city}` : `none`}</p>
       <DistancePicker selectedDistance={searchDistance} onDistanceChange={(d: number) => setSearchDistance(d)} />
       <StatePicker
         selectedState={selectedState}
