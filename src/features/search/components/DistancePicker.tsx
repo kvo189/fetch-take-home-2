@@ -1,20 +1,20 @@
 import { ChangeEvent } from 'react';
 import { Select } from '@chakra-ui/react';
+import { useLocationContext } from '@/context/LocationContext';
 
 interface DistancePickerProps {
-  selectedDistance: number;
-  onDistanceChange: (selectedDistance: number) => void;
   className?: string;
 }
 
-export const DistancePicker = ({ selectedDistance, onDistanceChange, className }: DistancePickerProps) => {
+export const DistancePicker = ({ className }: DistancePickerProps) => {
+  const {searchDistance, setSearchDistance} = useLocationContext()
   const distances: number[] = [0, 2, 4, 6, 8, 10, 15, 20];
 
-  const defaultSelectedState = selectedDistance || distances[0];
+  const defaultSelectedState = searchDistance || distances[0];
 
   const handleDistanceChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const newDistance = e.target.value as unknown as number;
-    onDistanceChange(newDistance);
+    const newDistance = +e.target.value as unknown as number;
+    setSearchDistance(newDistance);
   };
 
   return (

@@ -1,19 +1,22 @@
 import { ChangeEvent } from 'react';
 import { Select } from '@chakra-ui/react';
-import { StateAbbreviation } from '../types/StateAbbreviation'; // Replace with your actual import path
+import { STATES, StateAbbreviation } from '../types/StateAbbreviation'; // Replace with your actual import path
+import { useLocationContext } from '@/context/LocationContext';
 
 interface StatePickerProps {
-  selectedState: StateAbbreviation;
-  onStateChange: (selectedState: StateAbbreviation) => void;
   className?: string;
 }
 
-export const StatePicker = ({ selectedState, onStateChange, className  }: StatePickerProps) => {
-  const defaultSelectedState = selectedState || states[0];
+export const StatePicker = ({ className }: StatePickerProps) => {
+  const { searchDistance, setSearchDistance, selectedState, setSelectedState } = useLocationContext();
+  const defaultSelectedState = selectedState || STATES[0];
 
   const handleStateChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const newState = e.target.value as StateAbbreviation;
-    onStateChange(newState);
+    setSelectedState(newState);
+    if (!newState && searchDistance) {
+      setSearchDistance(0); // reset search distance if no state is selected
+    }
   };
 
   return (
@@ -22,7 +25,7 @@ export const StatePicker = ({ selectedState, onStateChange, className  }: StateP
         State
       </label>
       <Select id='select-state' background={'white'} value={defaultSelectedState} onChange={handleStateChange}>
-        {states.map((state) => (
+        {STATES.map((state) => (
           <option key={state} value={state}>
             {state === '' ? 'All states' : state}
           </option>
@@ -31,58 +34,3 @@ export const StatePicker = ({ selectedState, onStateChange, className  }: StateP
     </div>
   );
 };
-
-const states: StateAbbreviation[] = [
-  '',
-  'AL',
-  'AK',
-  'AZ',
-  'AR',
-  'CA',
-  'CO',
-  'CT',
-  'DE',
-  'FL',
-  'GA',
-  'HI',
-  'ID',
-  'IL',
-  'IN',
-  'IA',
-  'KS',
-  'KY',
-  'LA',
-  'ME',
-  'MD',
-  'MA',
-  'MI',
-  'MN',
-  'MS',
-  'MO',
-  'MT',
-  'NE',
-  'NV',
-  'NH',
-  'NJ',
-  'NM',
-  'NY',
-  'NC',
-  'ND',
-  'OH',
-  'OK',
-  'OR',
-  'PA',
-  'RI',
-  'SC',
-  'SD',
-  'TN',
-  'TX',
-  'UT',
-  'VT',
-  'VA',
-  'WA',
-  'WV',
-  'WI',
-  'WY',
-  'DC',
-];

@@ -2,36 +2,42 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Input, Box } from '@chakra-ui/react';
 import InputSuggestionsDropdown from '../components/InputSuggestionsDropdown';
 import { Location, getLocationsByZIPCodes, searchLocation } from '..'; // Replace with the actual import path for Location type
-import { StateAbbreviation } from '../types/StateAbbreviation';
 import { containsOnlyDigits } from '../utils/containsOnlyDigits';
 import { getSuggestedZipCodes } from '../utils/getSuggestedZipcodes';
 import { useDebounce } from '@uidotdev/usehooks';
 import { findClosestZipCode } from '../utils/findClosestZipCode';
 import { findCenterPoint } from '../utils/findCenterPoint';
 import { getBoundingBox } from '../utils/getBoundingBox';
+import { isStateAbbreviation } from '../utils/isStateAbbreviation';
 import { useLocationContext } from '@/context/LocationContext';
 import { useIsMount } from '@/hooks/useIsMount';
+import { calculateDistance } from '../utils/calculateDistance';
+
+type CityStatePair = { cityName: string; state: string };
 
 type LocationSearchInputProps = {
-  selectedState: StateAbbreviation;
-  searchDistance: number;
   className?: string;
 };
 
-const LocationSearchInput = ({ selectedState, searchDistance, className }: LocationSearchInputProps) => {
+const LocationSearchInput = ({ className }: LocationSearchInputProps) => {
   const [searchInput, setSearchInput] = useState<string>('');
   const debouncedSearchInput = useDebounce(searchInput, 300);
   const [isSearching, setIsSearching] = useState(false);
-  const [foundLocations, setFoundLocations] = useState<any[]>([]);
-  const [suggestedCities, setSuggestedCities] = useState<string[]>([]);
+  const [foundLocations, setFoundLocations] = useState<Location[]>([]);
+  const [suggestedCities, setSuggestedCities] = useState<CityStatePair[]>([]);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  // const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const { locationData, setLocationData } = useLocationContext();
-  const { selectedLocation, setSelectedLocation } = useLocationContext();
+  const {
+    locationData,
+    setLocationData,
+    selectedLocation,
+    setSelectedLocation,
+    searchDistance,
+    setSearchDistance,
+    selectedState,
+    setSelectedState,
+  } = useLocationContext();
   const [shouldHideDropdown, setShouldHideDropdown] = useState<boolean>(false);
   const isMount = useIsMount();
-
-  console.log('search dist', searchDistance)
 
   useEffect(() => {
     if (locationData?.city) {
@@ -51,9 +57,6 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
 
   useEffect(() => {
     if (searchDistance == 0) {
-      setLocationData(undefined);
-      setSelectedLocation(null);
-      setSearchInput('');
       return;
     }
 
@@ -63,14 +66,19 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
         searchDistance
       );
       searchLocation({ geoBoundingBox: boundingBox, size: 10000 }).then((res) => {
+        const locationsWithDistance = res.results
+          .map((targetLocation) => ({
+            ...targetLocation,
+            distanceFromSelected: calculateDistance(selectedLocation, targetLocation),
+          }))
+          .filter((location) => location.distanceFromSelected <= searchDistance);
         setLocationData({
           ...locationData,
           city: selectedLocation.city,
           state: selectedState,
-          locations: res.results,
-          zipCodes: Array.from(new Set(res.results.map((location) => location.zip_code))),
+          locations: locationsWithDistance,
+          zipCodes: Array.from(new Set(locationsWithDistance.map((location) => location.zip_code))),
           center: { lat: selectedLocation.latitude, lon: selectedLocation.longitude },
-          searchDistance: searchDistance,
           boundingBox: boundingBox,
         });
       });
@@ -78,15 +86,13 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
   }, [selectedLocation, searchDistance]);
 
   useEffect(() => {
-    console.log('selected state', selectedState, isMount, locationData)
     if (isMount) return; // ignore effect on initial render
-    console.log(locationData)
     setSearchInput('');
     // Clear other related states
     setFoundLocations([]);
     setSuggestedCities([]);
     setShowDropdown(false);
-    setSelectedLocation(null);
+    // setSelectedLocation(null);
   }, [selectedState]);
 
   const handleCitySearch = () => {
@@ -100,10 +106,17 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
     setIsSearching(true);
     searchLocation({
       city: searchInput,
-      states: [selectedState],
+      states: selectedState ? [selectedState] : undefined,
       size: 100,
     }).then((res) => {
-      const uniqueCities = Array.from(new Set(res.results.map((location) => location.city)));
+      const uniqueCitiesSet = new Set<string>();
+
+      // Create a set with unique stringified city-state combinations
+      res.results.forEach((location: Location) => {
+        uniqueCitiesSet.add(JSON.stringify({ cityName: location.city, state: location.state }));
+      });
+      // Convert set back to an array of objects
+      const uniqueCities: CityStatePair[] = Array.from(uniqueCitiesSet).map((item: string) => JSON.parse(item));
       setFoundLocations(res.results);
       setSuggestedCities(uniqueCities);
       if (uniqueCities.length > 0) setShowDropdown(true);
@@ -124,9 +137,11 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
     });
   };
 
-  const selectCity = (city: string) => {
-    setSearchInput(city);
-    const foundLocationsByCity = foundLocations.filter((location) => location.city === city);
+  const selectCity = (city: CityStatePair) => {
+    setSearchInput(city.cityName);
+    const foundLocationsByCity = foundLocations.filter(
+      (location) => location.city === city.cityName && location.state === city.state
+    );
     setSelectedLocation(findClosestZipCode(findCenterPoint(foundLocationsByCity), foundLocationsByCity));
   };
 
@@ -142,21 +157,32 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
   );
 
   const memoizedSuggestedCities = useMemo(
-    () => suggestedCities.map((city) => ({ key: city, value: city, label: city })),
+    () =>
+      suggestedCities.map((city) => ({
+        key: city.cityName + city.state,
+        value: city,
+        label: `${city.cityName}, ${city.state}`,
+      })),
     [suggestedCities]
   );
 
   const suggestions = containsOnlyDigits(searchInput) ? memoizedFoundLocations : memoizedSuggestedCities;
 
   const onSelect = useCallback(
-    (value: any) => {
+    (value: Location | CityStatePair) => {
+      if (!searchDistance) {
+        setSearchDistance(10);
+      }
+      if (selectedState !== value.state && isStateAbbreviation(value.state)) {
+        setSelectedState(value.state);
+      }
       if (containsOnlyDigits(searchInput)) {
-        selectLocationByZIPCode(value);
+        selectLocationByZIPCode(value as Location);
       } else {
-        selectCity(value);
+        selectCity(value as CityStatePair);
       }
     },
-    [containsOnlyDigits, searchInput, selectLocationByZIPCode, selectCity]
+    [containsOnlyDigits, searchInput, selectLocationByZIPCode, selectCity, searchDistance]
   );
 
   return (
@@ -179,7 +205,6 @@ const LocationSearchInput = ({ selectedState, searchDistance, className }: Locat
         bg={'white'}
         // disabled={isSearching || searchDistance == 0 || selectedState === ''}
       />
-      {/* searching? {isSearching.toString()}  d {searchDistance} s {selectedState} */}
       {/* Location Suggestions Dropdown */}
       <InputSuggestionsDropdown
         suggestions={suggestions}

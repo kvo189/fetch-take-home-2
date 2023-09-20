@@ -1,5 +1,4 @@
-import { useDebounce } from '@uidotdev/usehooks';
-import React, { useEffect } from 'react';
+import React from 'react';
 import ReactSlider from 'react-slider';
 
 interface SliderProps {

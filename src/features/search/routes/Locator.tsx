@@ -1,7 +1,6 @@
 import { Box, Button, Text } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { StatePicker } from '../components/StatePicker';
-import { StateAbbreviation } from '../types/StateAbbreviation';
 import { Layout } from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { useLocationContext } from '@/context/LocationContext';
@@ -11,10 +10,7 @@ import { Map } from 'leaflet';
 import LocationSearchInput from '../components/LocationSearchInput';
 
 const Locator = () => {
-  // Existing state variables
-  const [selectedState, setSelectedState] = useState<StateAbbreviation>('AL');
   const [map, setMap] = useState<Map | null>(null); // Get leaflet map instance
-  const [searchDistance, setSearchDistance] = useState<number>(10); // Search distance in miles
   const { locationData } = useLocationContext();
   const navigate = useNavigate();
 
@@ -34,17 +30,9 @@ const Locator = () => {
       <Layout title='Locator' heading='Select a state and zip code'>
         <Box className='w-full flex flex-col items-center mx-auto gap-3 max-w-2xl'>
           <div className='flex flex-col sm:flex-row w-full gap-2'>
-            <DistancePicker
-              className='flex-1'
-              selectedDistance={searchDistance}
-              onDistanceChange={(d) => setSearchDistance(d)}
-            />
-            <StatePicker
-              className='flex-1'
-              selectedState={selectedState}
-              onStateChange={(newState) => setSelectedState(newState)}
-            />
-            <LocationSearchInput selectedState={selectedState} searchDistance={searchDistance} />
+            <DistancePicker className='flex-1' />
+            <StatePicker className='flex-1' />
+            <LocationSearchInput />
           </div>
           {/* Location prompt */}
           {locationData?.zipCodes && locationData?.zipCodes?.length > 0 && (

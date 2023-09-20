@@ -1,42 +1,35 @@
-import { Layout } from '../components/Layout';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Select, Button, Box, SimpleGrid, Center, VStack, Text, Image, AspectRatio, filter } from '@chakra-ui/react';
+import { Select, Button, Box, SimpleGrid, Center, Text, Image, AspectRatio } from '@chakra-ui/react';
 import { Dog, DogSearchQuery } from '../types/types';
 import { getDogSearchResults, getDogBreeds, getDogsByIds } from '..';
 import { useLocationContext } from '@/context/LocationContext';
 import Slider from '../components/Slider';
 import { StatePicker } from '../components/StatePicker';
-import { StateAbbreviation } from '../types/StateAbbreviation';
 import { DistancePicker } from '../components/DistancePicker';
 import LocationSearchInput from '../components/LocationSearchInput';
 import { SearchDrawer } from '../components/SearchDrawer';
 import { calculatePageEndIndex } from '../utils/calculatePageEndIndex';
+import { sortDogsByDistance } from '../utils/sortDogsByDistance';
 
 interface FilterProps {
   searchCount: number;
-  selectedState: StateAbbreviation;
-  setSelectedState: React.Dispatch<React.SetStateAction<StateAbbreviation>>;
-  searchDistance: number;
-  setSearchDistance: React.Dispatch<React.SetStateAction<number>>;
   filters: DogSearchQuery;
   setFilters: React.Dispatch<React.SetStateAction<DogSearchQuery>>;
   breeds: string[];
-  sorting: 'asc' | 'desc';
-  setSorting: React.Dispatch<React.SetStateAction<'asc' | 'desc'>>;
+  sorting: string;
+  setSorting: React.Dispatch<React.SetStateAction<string>>;
   handleSliderChange: (value: number[]) => void;
   handleSearch: () => void;
 }
 
 export const DogSearch = () => {
-  const [selectedState, setSelectedState] = useState<StateAbbreviation>('AL');
-  const [searchDistance, setSearchDistance] = useState<number>(10);
-  const { locationData } = useLocationContext();
+  const { locationData, setSelectedState } = useLocationContext();
   const [breeds, setBreeds] = useState<string[]>([]);
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [filters, setFilters] = useState<DogSearchQuery>({ breeds: [], ageMin: undefined, ageMax: undefined });
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [pagination, setPagination] = useState({ currentPageResults: 0, pageSize: 25, totalPage: 0, totalResults: 0 });
-  const [sorting, setSorting] = useState<'asc' | 'desc'>('asc');
+  const [sorting, setSorting] = useState<string>('breed:asc');
   const [searchCount, setSearchCount] = useState<number>(0);
 
   useEffect(() => {
@@ -45,19 +38,30 @@ export const DogSearch = () => {
 
   const fetchData = useCallback(async () => {
     try {
+      const sortOptions = ['age:asc', 'age:desc', 'breed:asc', 'breed:desc', 'name:asc', 'name:desc'];
       const searchParams: DogSearchQuery = {
         ...filters,
         breeds: filters.breeds?.filter(Boolean) || undefined,
         zipCodes: locationData?.zipCodes,
-        sort: `breed:${sorting}`,
+        sort: sortOptions.includes(sorting) ? sorting : undefined,
         from: currentPage * pagination.pageSize,
         size: pagination.pageSize,
       };
 
-      console.log('fetching data with params...', searchParams);
+      console.log('fetching data with params...', searchParams, locationData);
 
       const dogsSearchResponse = await getDogSearchResults(searchParams);
-      const dogsResponse = await getDogsByIds(dogsSearchResponse.resultIds);
+      let dogsResponse = dogsSearchResponse.resultIds.length ? await getDogsByIds(dogsSearchResponse.resultIds) : [];
+      console.log(locationData?.locations, dogsResponse);
+      dogsResponse = dogsResponse.map((dog) => {
+        const calculatedDist = locationData?.locations
+          .find((loc) => loc.zip_code === dog.zip_code)
+          ?.distanceFromSelected?.toFixed(2);
+        return calculatedDist ? { ...dog, distance: parseFloat(calculatedDist) } : dog;
+      });
+      if (sorting === 'distance:asc' || sorting === 'distance:desc') {
+        dogsResponse = sortDogsByDistance(dogsResponse, sorting);
+      }
       setDogs(dogsResponse);
       setSearchCount((prevCount) => prevCount + 1);
       setPagination((prevPagination) => ({
@@ -100,7 +104,6 @@ export const DogSearch = () => {
     if (locationData) {
       console.log('init dog search with locatioDATA...', locationData);
       setSelectedState(locationData.state);
-      setSearchDistance(locationData.searchDistance);
     }
   }, []);
 
@@ -111,10 +114,6 @@ export const DogSearch = () => {
   const filterProps = useMemo(
     () => ({
       searchCount,
-      selectedState,
-      setSelectedState,
-      searchDistance,
-      setSearchDistance,
       filters,
       setFilters,
       breeds,
@@ -123,7 +122,7 @@ export const DogSearch = () => {
       handleSliderChange,
       handleSearch,
     }),
-    [searchCount, selectedState, searchDistance, filters, breeds, sorting, handleSliderChange, handleSearch]
+    [searchCount, filters, breeds, sorting, handleSliderChange, handleSearch]
   );
 
   return (
@@ -137,7 +136,7 @@ export const DogSearch = () => {
 
       <div className='flex flex-col w-full gap-4'>
         {(pagination.totalResults && (
-          <div className='flex flex-col sm:flex-row gap-3 justify-center md:justify-between items-center w-100'>
+          <div className='flex flex-col sm:flex-row gap-3 justify-center md:justify-between items-center w-100 [&>*]:flex-1'>
             <div className=''>
               Showing {pagination.pageSize * currentPage + 1} -{' '}
               {calculatePageEndIndex(currentPage, pagination.pageSize, pagination.totalResults)} of {pagination.totalResults}{' '}
@@ -147,6 +146,7 @@ export const DogSearch = () => {
               <Button onClick={() => currentPage > 0 && setCurrentPage((page) => page - 1)}>Prev</Button>
 
               <Select
+                maxW={'100px'}
                 value={currentPage + 1}
                 onChange={(e) => {
                   const selectedPage = parseInt(e.target.value);
@@ -167,7 +167,7 @@ export const DogSearch = () => {
               </Button>
             </div>
 
-            <div className='hidden sm:block px-2'>
+            <div className='hidden sm:block px-2 text-right'>
               Page: {currentPage + 1}/{pagination.totalPage}
             </div>
           </div>
@@ -195,6 +195,7 @@ export const DogSearch = () => {
                 <Text>{dog.breed}</Text>
                 <Text>{dog.age} years old</Text>
                 <Text>Zip code: {dog.zip_code}</Text>
+                <Text>{dog.distance} miles away</Text>
               </Box>
             </Box>
           ))}
@@ -206,29 +207,22 @@ export const DogSearch = () => {
 
 const FiltersContent: React.FC<{ filterProps: FilterProps }> = ({ filterProps }) => {
   const { selectedLocation } = useLocationContext();
-  const {
-    searchCount,
-    selectedState,
-    setSelectedState,
-    searchDistance,
-    setSearchDistance,
-    filters,
-    setFilters,
-    breeds,
-    sorting,
-    setSorting,
-    handleSliderChange,
-  } = filterProps;
+  const { searchCount, filters, setFilters, breeds, sorting, setSorting, handleSliderChange } = filterProps;
   return (
     <div id='div-filters-container' className='flex flex-col w-full gap-2'>
-      <p className='text-lg'>Search count: {searchCount}</p>
-      <p className='text-lg'>Selected location: {selectedLocation ? `${selectedLocation.city}` : `none`}</p>
-      <DistancePicker selectedDistance={searchDistance} onDistanceChange={(d: number) => setSearchDistance(d)} />
-      <StatePicker
-        selectedState={selectedState}
-        onStateChange={(newState: StateAbbreviation) => setSelectedState(newState)}
-      />
-      <LocationSearchInput selectedState={selectedState} searchDistance={searchDistance} />
+      <p className=''>
+        <span className='font-semibold'>Search count:</span>
+        <br />
+        {searchCount}
+      </p>
+      <p className=''>
+        <span className='font-semibold'>Selected location:</span>
+        <br />
+        {selectedLocation ? `${selectedLocation.city}, ${selectedLocation.state} ${selectedLocation.zip_code}` : `none`}
+      </p>
+      <DistancePicker />
+      <StatePicker />
+      <LocationSearchInput />
       <div id='div-breed-select-container' className='w-full'>
         <label className='font-semibold' htmlFor='select-breeds'>
           Select breed
@@ -254,8 +248,14 @@ const FiltersContent: React.FC<{ filterProps: FilterProps }> = ({ filterProps })
           Sort by breed
         </label>
         <Select value={sorting} onChange={(e) => setSorting(e.target.value as 'asc' | 'desc')} bg={'white'}>
-          <option value='asc'>Ascending</option>
-          <option value='desc'>Descending</option>
+          <option value='age:asc'>Age - Ascending</option>
+          <option value='age:desc'>Age - Descending</option>
+          <option value='breed:asc'>Breed - Ascending</option>
+          <option value='breed:desc'>Breed - Descending</option>
+          <option value='distance:asc'>Distance - Ascending</option>
+          <option value='distance:desc'>Distance - Descending</option>
+          <option value='name:asc'>Name - Ascending</option>
+          <option value='name:desc'>Name - Descending</option>
         </Select>
       </div>
       <Slider

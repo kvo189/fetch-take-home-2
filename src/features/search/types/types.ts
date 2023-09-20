@@ -11,6 +11,7 @@ export interface Dog {
     age: number;
     zip_code: string;
     breed: string;
+    distance?: number;
 }
 
 export interface DogSearchQuery {
@@ -37,6 +38,7 @@ export interface Location {
     city: string;
     state: string;
     county: string;
+    distanceFromSelected?: number;
 }
 
 export interface Coordinates {

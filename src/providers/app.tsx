@@ -1,14 +1,11 @@
-import MainLayout from '@/components/Layout/MainLayout';
 import { Button, ChakraProvider } from '@chakra-ui/react';
 import React from 'react';
 import { HelmetProvider } from 'react-helmet-async';
-import { BrowserRouter as Router } from 'react-router-dom';
 import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import customHistory from '@/lib/history';
 
 import { createBrowserHistory } from 'history';
 // import { ErrorBoundary } from 'react-error-boundary';
-let history = createBrowserHistory();
 
 const ErrorFallback = () => {
   return (
