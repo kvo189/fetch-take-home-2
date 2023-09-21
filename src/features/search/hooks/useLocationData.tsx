@@ -59,7 +59,7 @@ function useLocationData() {
     const boundingBox = getBoundingBox({ lat: location.latitude, lon: location.longitude }, distance);
 
     try {
-      const res = await searchLocation({ geoBoundingBox: boundingBox, size: 10000 });
+      const res = await searchLocation({ geoBoundingBox: boundingBox, size: 120 });
       const locationsWithDistance = res.results
         .map((targetLocation) => ({
           ...targetLocation,
