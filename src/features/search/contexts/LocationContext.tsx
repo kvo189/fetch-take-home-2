@@ -2,22 +2,20 @@ import { BottomLeftTopRight, Coordinates, Location } from '@/features/search';
 import { StateAbbreviation } from '@/features/search/types/StateAbbreviation';
 import React, { ReactNode, createContext, useContext, useState } from 'react';
 
-// Define the shape of your location data
-interface LocationData {
-  city: string;
-  state: StateAbbreviation;
+// Define the shape of location data
+export interface SelectedLocationSet {
+  // city: string;
   locations: Location[];
-  zipCodes: string[] | undefined;
-  center: Coordinates;
+  // center: Coordinates;
   boundingBox: BottomLeftTopRight;
 }
 
 // Create the context
 export interface LocationContextType {
-  locationData: LocationData | undefined;
-  setLocationData: React.Dispatch<React.SetStateAction<LocationData | undefined>>;
+  locationData: SelectedLocationSet | undefined | null;
+  setLocationData: React.Dispatch<React.SetStateAction<SelectedLocationSet | undefined | null>>;
   selectedLocation: Location | undefined | null;
-  setSelectedLocation: React.Dispatch<React.SetStateAction<Location | undefined | null>>;
+  setSelectedLocation: React.Dispatch<React.SetStateAction<Location | null | undefined>>;
   searchDistance: number;
   setSearchDistance: React.Dispatch<React.SetStateAction<number>>;
   selectedState: StateAbbreviation;
@@ -41,7 +39,7 @@ interface LocationProviderProps {
 }
 
 export function LocationProvider({ children }: LocationProviderProps) {
-  const [locationData, setLocationData] = useState<LocationData | undefined>(undefined);
+  const [locationData, setLocationData] = useState<SelectedLocationSet | undefined | null>(undefined);
   const [selectedLocation, setSelectedLocation] = useState<Location | undefined | null>(undefined);
   const [searchDistance, setSearchDistance] = useState<number>(0);
   const [selectedState, setSelectedState] = useState<StateAbbreviation>('');

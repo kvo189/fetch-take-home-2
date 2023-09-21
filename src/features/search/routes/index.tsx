@@ -1,7 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import { DogSearch } from './DogSearch';
 import Locator from './Locator';
-import { LocationProvider } from '@/context/LocationContext';
+import { LocationProvider } from '@/features/search/contexts/LocationContext';
 
 export const SearchRoutes = () => {
 

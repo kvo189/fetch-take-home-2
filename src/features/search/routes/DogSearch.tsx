@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Select, Button, Box, SimpleGrid, Center, Text, Image, AspectRatio } from '@chakra-ui/react';
 import { Dog, DogSearchQuery } from '../types/types';
 import { getDogSearchResults, getDogBreeds, getDogsByIds } from '..';
-import { useLocationContext } from '@/context/LocationContext';
+import { useLocationContext } from '@/features/search/contexts/LocationContext';
 import Slider from '../components/Slider';
 import { StatePicker } from '../components/StatePicker';
 import { DistancePicker } from '../components/DistancePicker';
@@ -23,7 +23,7 @@ interface FilterProps {
 }
 
 export const DogSearch = () => {
-  const { locationData, setSelectedState } = useLocationContext();
+  const { locationData } = useLocationContext();
   const [breeds, setBreeds] = useState<string[]>([]);
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [filters, setFilters] = useState<DogSearchQuery>({ breeds: [], ageMin: undefined, ageMax: undefined });
@@ -42,7 +42,7 @@ export const DogSearch = () => {
       const searchParams: DogSearchQuery = {
         ...filters,
         breeds: filters.breeds?.filter(Boolean) || undefined,
-        zipCodes: locationData?.zipCodes,
+        zipCodes: Array.from(new Set(locationData?.locations.map((location) => location.zip_code))),
         sort: sortOptions.includes(sorting) ? sorting : undefined,
         from: currentPage * pagination.pageSize,
         size: pagination.pageSize,
@@ -101,10 +101,6 @@ export const DogSearch = () => {
         console.error('Error fetching dog breeds:', error);
       }
     })();
-    if (locationData) {
-      console.log('init dog search with locatioDATA...', locationData);
-      setSelectedState(locationData.state);
-    }
   }, []);
 
   const handleSliderChange = useCallback((value: number[]) => {

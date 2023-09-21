@@ -18,12 +18,12 @@ const useHandleClickOutside = (ref: React.RefObject<HTMLElement>, handler: () =>
 
 interface InputSuggestionDropdownProps {
   suggestions: { key: string, value: any; label: string }[];
-  onSelect: (value: any) => void;
+  onSelectSugestion: (value: any) => void;
   showDropdown: boolean;
   setShowDropdown: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const InputSuggestionsDropdown = ({ suggestions, onSelect, showDropdown, setShowDropdown }: InputSuggestionDropdownProps) => {
+const InputSuggestionsDropdown = ({ suggestions, onSelectSugestion: onSelect, showDropdown, setShowDropdown }: InputSuggestionDropdownProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useHandleClickOutside(dropdownRef, () => setShowDropdown(false));

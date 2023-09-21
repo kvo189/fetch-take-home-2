@@ -9,9 +9,10 @@ import { findClosestZipCode } from '../utils/findClosestZipCode';
 import { findCenterPoint } from '../utils/findCenterPoint';
 import { getBoundingBox } from '../utils/getBoundingBox';
 import { isStateAbbreviation } from '../utils/isStateAbbreviation';
-import { useLocationContext } from '@/context/LocationContext';
+import { useLocationContext } from '@/features/search/contexts/LocationContext';
 import { useIsMount } from '@/hooks/useIsMount';
 import { calculateDistance } from '../utils/calculateDistance';
+import useLocationData from '../hooks/useLocationData';
 
 type CityStatePair = { cityName: string; state: string };
 
@@ -27,24 +28,32 @@ const LocationSearchInput = ({ className }: LocationSearchInputProps) => {
   const [suggestedCities, setSuggestedCities] = useState<CityStatePair[]>([]);
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const {
-    locationData,
-    setLocationData,
     selectedLocation,
-    setSelectedLocation,
-    searchDistance,
-    setSearchDistance,
     selectedState,
     setSelectedState,
   } = useLocationContext();
+  const { updateSelectedLocation } = useLocationData();
   const [shouldHideDropdown, setShouldHideDropdown] = useState<boolean>(false);
   const isMount = useIsMount();
 
+  // Any time the a new state is selected, reset related data belonging to this component. Ignore this effect on inital render.
   useEffect(() => {
-    if (locationData?.city) {
-      setSearchInput(locationData.city);
+    if (isMount) return;
+    // if (selectedState === '') return;
+    console.log({selectedLocation}, {selectedState})
+    setSearchInput('');
+    setFoundLocations([]);
+    setSuggestedCities([]);
+    setShowDropdown(false);
+  }, [selectedState]);
+
+  useEffect(() => {
+    if (selectedLocation) {
+      console.log({selectedLocation}, {selectedState})
+      setSearchInput(selectedLocation.city);
       setShouldHideDropdown(true);
     }
-  }, [locationData]);
+  }, [selectedLocation]);
 
   useEffect(() => {
     if (shouldHideDropdown) return setShouldHideDropdown(false);
@@ -54,46 +63,6 @@ const LocationSearchInput = ({ className }: LocationSearchInputProps) => {
       handleCitySearch(); // Handle city name input
     }
   }, [debouncedSearchInput]);
-
-  useEffect(() => {
-    if (searchDistance == 0) {
-      return;
-    }
-
-    if (selectedLocation && !isMount) {
-      const boundingBox = getBoundingBox(
-        { lat: selectedLocation.latitude, lon: selectedLocation.longitude },
-        searchDistance
-      );
-      searchLocation({ geoBoundingBox: boundingBox, size: 10000 }).then((res) => {
-        const locationsWithDistance = res.results
-          .map((targetLocation) => ({
-            ...targetLocation,
-            distanceFromSelected: calculateDistance(selectedLocation, targetLocation),
-          }))
-          .filter((location) => location.distanceFromSelected <= searchDistance);
-        setLocationData({
-          ...locationData,
-          city: selectedLocation.city,
-          state: selectedState,
-          locations: locationsWithDistance,
-          zipCodes: Array.from(new Set(locationsWithDistance.map((location) => location.zip_code))),
-          center: { lat: selectedLocation.latitude, lon: selectedLocation.longitude },
-          boundingBox: boundingBox,
-        });
-      });
-    }
-  }, [selectedLocation, searchDistance]);
-
-  useEffect(() => {
-    if (isMount) return; // ignore effect on initial render
-    setSearchInput('');
-    // Clear other related states
-    setFoundLocations([]);
-    setSuggestedCities([]);
-    setShowDropdown(false);
-    // setSelectedLocation(null);
-  }, [selectedState]);
 
   const handleCitySearch = () => {
     if (
@@ -137,25 +106,13 @@ const LocationSearchInput = ({ className }: LocationSearchInputProps) => {
     });
   };
 
-  const selectCity = (city: CityStatePair) => {
-    setSearchInput(city.cityName);
-    const foundLocationsByCity = foundLocations.filter(
-      (location) => location.city === city.cityName && location.state === city.state
-    );
-    setSelectedLocation(findClosestZipCode(findCenterPoint(foundLocationsByCity), foundLocationsByCity));
-  };
-
-  const selectLocationByZIPCode = (location: Location) => {
-    setSearchInput(location.zip_code);
-    setSelectedLocation(location);
-  };
-
+  // Create memoized values for found locations
   const memoizedFoundLocations = useMemo(
     () =>
       foundLocations.map((loc) => ({ key: loc.zip_code, value: loc, label: `${loc.zip_code} ${loc.city}, ${loc.state}` })),
     [foundLocations]
   );
-
+  // Create memoized values for suggested cities
   const memoizedSuggestedCities = useMemo(
     () =>
       suggestedCities.map((city) => ({
@@ -165,14 +122,28 @@ const LocationSearchInput = ({ className }: LocationSearchInputProps) => {
       })),
     [suggestedCities]
   );
-
+  // Determine which set of suggestions to use based on the search input
   const suggestions = containsOnlyDigits(searchInput) ? memoizedFoundLocations : memoizedSuggestedCities;
+  
+  // Select a location based on the closest ZIP code to the center point of all cities in a state
+  const selectCity = (city: CityStatePair) => {
+    setSearchInput(city.cityName);
+    const foundLocationsByCity = foundLocations.filter(
+      (location) => location.city === city.cityName && location.state === city.state
+    );
+    const closestZip = findClosestZipCode(findCenterPoint(foundLocationsByCity), foundLocationsByCity);
+    updateSelectedLocation(closestZip);
+  };
 
-  const onSelect = useCallback(
+  // Select a location based on a ZIP code
+  const selectLocationByZIPCode = (location: Location) => {
+    setSearchInput(location.zip_code);
+    updateSelectedLocation(location);
+  };
+
+  // Function to run when a suggestion is selected
+  const onSelectSuggestion = useCallback(
     (value: Location | CityStatePair) => {
-      if (!searchDistance) {
-        setSearchDistance(10);
-      }
       if (selectedState !== value.state && isStateAbbreviation(value.state)) {
         setSelectedState(value.state);
       }
@@ -182,7 +153,7 @@ const LocationSearchInput = ({ className }: LocationSearchInputProps) => {
         selectCity(value as CityStatePair);
       }
     },
-    [containsOnlyDigits, searchInput, selectLocationByZIPCode, selectCity, searchDistance]
+    [containsOnlyDigits, searchInput, selectLocationByZIPCode, selectCity]
   );
 
   return (
@@ -208,7 +179,7 @@ const LocationSearchInput = ({ className }: LocationSearchInputProps) => {
       {/* Location Suggestions Dropdown */}
       <InputSuggestionsDropdown
         suggestions={suggestions}
-        onSelect={onSelect}
+        onSelectSugestion={onSelectSuggestion}
         showDropdown={showDropdown}
         setShowDropdown={setShowDropdown}
       />

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { StatePicker } from '../components/StatePicker';
 import { Layout } from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
-import { useLocationContext } from '@/context/LocationContext';
+import { useLocationContext } from '@/features/search/contexts/LocationContext';
 import { MapContainer, Marker, Popup, Rectangle, TileLayer } from 'react-leaflet';
 import { DistancePicker } from '../components/DistancePicker';
 import { Map } from 'leaflet';
@@ -11,7 +11,7 @@ import LocationSearchInput from '../components/LocationSearchInput';
 
 const Locator = () => {
   const [map, setMap] = useState<Map | null>(null); // Get leaflet map instance
-  const { locationData } = useLocationContext();
+  const { locationData, selectedState, selectedLocation } = useLocationContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,11 +35,11 @@ const Locator = () => {
             <LocationSearchInput />
           </div>
           {/* Location prompt */}
-          {locationData?.zipCodes && locationData?.zipCodes?.length > 0 && (
+          {locationData?.locations?.length && selectedLocation && (
             <Text mt={2} className='mt-5 text-lg'>
               You have selected{' '}
               <span className='font-semibold'>
-                {locationData.city}, {locationData.state}
+                {selectedLocation.city}, {selectedLocation.state}
               </span>
             </Text>
           )}
@@ -48,16 +48,20 @@ const Locator = () => {
             bg={'blue.400'}
             color={'white'}
             _hover={{ bg: 'blue.500' }}
-            isDisabled={!locationData?.zipCodes || locationData?.zipCodes.length === 0}
+            isDisabled={!locationData?.locations?.length}
             onClick={() => navigate('./dog')}
           >
             Continue
           </Button>
           {/* Map */}
-          {locationData?.center.lat} {locationData?.center.lon}
+          {selectedLocation?.latitude} {selectedLocation?.longitude}
           <div className='w-full relative'>
             <MapContainer
-              center={locationData?.center ? [locationData?.center.lat, locationData?.center.lon] : [33.456412, -86.801904]}
+              center={
+                selectedLocation?.latitude && selectedLocation?.longitude
+                  ? [selectedLocation.latitude, selectedLocation.longitude]
+                  : [33.456412, -86.801904]
+              }
               zoom={10}
               whenReady={() => console.log('Map ready')}
               style={{ height: '400px', width: '100%' }}
@@ -65,17 +69,21 @@ const Locator = () => {
             >
               <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
-              {locationData && (
+              {selectedLocation && (
                 <>
-                  <Marker position={[locationData.center.lat, locationData.center.lon]}>
+                  <Marker position={[selectedLocation.latitude, selectedLocation.longitude]}>
                     <Popup>{`Locations to search: ${locationData?.locations?.length}`}</Popup>
                   </Marker>
-                  <Rectangle
-                    bounds={[
-                      [locationData.boundingBox.top_right.lat, locationData.boundingBox.top_right.lon],
-                      [locationData.boundingBox.bottom_left.lat, locationData.boundingBox.bottom_left.lon],
-                    ]}
-                  ></Rectangle>
+                  (
+                  {locationData && (
+                    <Rectangle
+                      bounds={[
+                        [locationData.boundingBox.top_right.lat, locationData.boundingBox.top_right.lon],
+                        [locationData.boundingBox.bottom_left.lat, locationData.boundingBox.bottom_left.lon],
+                      ]}
+                    ></Rectangle>
+                  )}
+                  )
                 </>
               )}
             </MapContainer>
