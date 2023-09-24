@@ -1,8 +1,8 @@
-import { Coordinates, Location } from "../types/types";
+import { Coordinates, Location } from "../types";
 import { haversineDistance } from "@/utils/haversineDistance";
 
 // Function to find the closest zip code to the center point
-export function findClosestZipCode(center: Coordinates, locations: Location[]): Location | null {
+export function findClosestZipCode(center: Coordinates, locations: Location[]): Location {
     let closestLocation = locations[0];
     let minDistance = haversineDistance(center.lat, center.lon, closestLocation.latitude, closestLocation.longitude);
 

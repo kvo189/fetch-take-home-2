@@ -24,25 +24,39 @@ export const SearchDrawer = ({ header, Body, Footer, drawerText }: SearchDrawerP
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isDrawer = useBreakpointValue({ base: true, lg: false });
 
-  return isDrawer ? (
+  // const BodyComponent = <div style={{ display: isDrawer ? 'none' : 'block' }}>{Body}</div>;
+  // const FooterComponent = <div style={{ display: isDrawer ? 'none' : 'block' }}>{Footer}</div>;
+
+  return (
     <>
-      <Button onClick={onOpen}>{drawerText}</Button>
-      <Drawer placement='left' onClose={onClose} isOpen={isOpen}>
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader>{header}</DrawerHeader>
-          <DrawerBody>{Body}</DrawerBody>
-          <DrawerFooter>{Footer}</DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      {isDrawer ? (
+        <>
+          <Button onClick={onOpen}>{drawerText}</Button>
+          <Drawer placement='left' onClose={onClose} isOpen={isOpen}>
+            <DrawerOverlay />
+            <DrawerContent>
+              <DrawerCloseButton />
+              <DrawerHeader>{header}</DrawerHeader>
+              <DrawerBody>{Body}</DrawerBody>
+              <DrawerFooter>{Footer}</DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        </>
+      ) : (
+        <VStack spacing={2} alignItems={'center'} maxHeight={'100vh'}>
+          <div className='sticky top-0 flex flex-col items-center justify-center p-4'>
+            {Body}
+            {Footer}
+          </div>
+        </VStack>
+      )}
+
+      {/* <VStack spacing={2} alignItems={'center'} maxHeight={'100vh'}>
+        <div className='sticky top-0 flex flex-col items-center justify-center p-4'>
+          {Body}
+          {Footer}
+        </div>
+      </VStack> */}
     </>
-  ) : (
-    <VStack spacing={2} alignItems={'center'} maxHeight={'100vh'}>
-      <div className='sticky top-0 flex flex-col items-center justify-center p-4'>
-        {Body}
-        {Footer}
-      </div>
-    </VStack>
   );
 };

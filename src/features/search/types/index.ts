@@ -39,6 +39,7 @@ export interface Location {
     state: string;
     county: string;
     distanceFromSelected?: number;
+    suggestionText?: string;
 }
 
 export interface Coordinates {

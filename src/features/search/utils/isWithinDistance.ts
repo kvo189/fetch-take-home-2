@@ -1,4 +1,4 @@
-import { Location } from '../types/types'
+import { Location } from '../types'
 
 export const isWithinDistance = (center: { latitude: number; longitude: number }, location: Location, maxDistanceInMiles: number): boolean => {
     const R = 3958.8; // Radius of the Earth in miles

@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Select, Button, Box, SimpleGrid, Center, Text, Image, AspectRatio } from '@chakra-ui/react';
-import { Dog, DogSearchQuery } from '../types/types';
+import { Dog, DogSearchQuery } from '../types';
 import { getDogSearchResults, getDogBreeds, getDogsByIds } from '..';
-import { useLocationContext } from '@/features/search/contexts/LocationContext';
 import Slider from '../components/Slider';
 import { StatePicker } from '../components/StatePicker';
 import { DistancePicker } from '../components/DistancePicker';
-import LocationSearchInput from '../components/LocationSearchInput';
 import { SearchDrawer } from '../components/SearchDrawer';
 import { calculatePageEndIndex } from '../utils/calculatePageEndIndex';
 import { sortDogsByDistance } from '../utils/sortDogsByDistance';
+import SearchInput from '../components/SearchInput';
+import useLocationStore from '../stores/locationStore';
 
 interface FilterProps {
   searchCount: number;
@@ -23,7 +23,10 @@ interface FilterProps {
 }
 
 export const DogSearch = () => {
-  const { locationData } = useLocationContext();
+  // const { selectedLocationArea } = useLocationContext();
+  const { selectedLocationArea } = useLocationStore((state) => ({
+    selectedLocationArea: state.selectedLocationArea,
+  }));
   const [breeds, setBreeds] = useState<string[]>([]);
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [filters, setFilters] = useState<DogSearchQuery>({ breeds: [], ageMin: undefined, ageMax: undefined });
@@ -42,19 +45,19 @@ export const DogSearch = () => {
       const searchParams: DogSearchQuery = {
         ...filters,
         breeds: filters.breeds?.filter(Boolean) || undefined,
-        zipCodes: Array.from(new Set(locationData?.locations.map((location) => location.zip_code))),
+        zipCodes: Array.from(new Set(selectedLocationArea?.locations.map((location) => location.zip_code))),
         sort: sortOptions.includes(sorting) ? sorting : undefined,
         from: currentPage * pagination.pageSize,
         size: pagination.pageSize,
       };
 
-      console.log('fetching data with params...', searchParams, locationData);
+      console.log('fetching data with params...', searchParams, selectedLocationArea);
 
       const dogsSearchResponse = await getDogSearchResults(searchParams);
       let dogsResponse = dogsSearchResponse.resultIds.length ? await getDogsByIds(dogsSearchResponse.resultIds) : [];
-      console.log(locationData?.locations, dogsResponse);
+      console.log(selectedLocationArea?.locations, dogsResponse);
       dogsResponse = dogsResponse.map((dog) => {
-        const calculatedDist = locationData?.locations
+        const calculatedDist = selectedLocationArea?.locations
           .find((loc) => loc.zip_code === dog.zip_code)
           ?.distanceFromSelected?.toFixed(2);
         return calculatedDist ? { ...dog, distance: parseFloat(calculatedDist) } : dog;
@@ -73,7 +76,7 @@ export const DogSearch = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  }, [filters, sorting, currentPage, locationData]);
+  }, [filters, sorting, currentPage, selectedLocationArea]);
 
   const handleSearch = useCallback(() => {
     fetchData();
@@ -81,7 +84,7 @@ export const DogSearch = () => {
 
   useEffect(() => {
     console.log('A parameter affecting the search has changed.', {
-      locationData,
+      selectedLocationArea,
       currentPage,
       sorting,
       ageMin: filters.ageMin,
@@ -90,7 +93,7 @@ export const DogSearch = () => {
     });
 
     fetchData();
-  }, [locationData, currentPage, sorting, filters.ageMin, filters.ageMax, filters.breeds]);
+  }, [selectedLocationArea, currentPage, sorting, filters.ageMin, filters.ageMax, filters.breeds]);
 
   useEffect(() => {
     (async () => {
@@ -202,7 +205,9 @@ export const DogSearch = () => {
 };
 
 const FiltersContent: React.FC<{ filterProps: FilterProps }> = ({ filterProps }) => {
-  const { selectedLocation } = useLocationContext();
+  const { selectedLocation } = useLocationStore((state) => ({
+    selectedLocation: state.selectedLocation,
+  }));
   const { searchCount, filters, setFilters, breeds, sorting, setSorting, handleSliderChange } = filterProps;
   return (
     <div id='div-filters-container' className='flex flex-col w-full gap-2'>
@@ -218,7 +223,7 @@ const FiltersContent: React.FC<{ filterProps: FilterProps }> = ({ filterProps })
       </p>
       <DistancePicker />
       <StatePicker />
-      <LocationSearchInput />
+      <SearchInput />
       <div id='div-breed-select-container' className='w-full'>
         <label className='font-semibold' htmlFor='select-breeds'>
           Select breed

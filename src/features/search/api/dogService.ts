@@ -1,6 +1,6 @@
 import { FETCH_BASE_URL } from '@/config';
 import axiosClient from '@/lib/axiosClient';
-import { DogSearchQuery, Match, DogSearchResponse, Dog } from '../types/types';
+import { DogSearchQuery, Match, DogSearchResponse, Dog } from '../types';
 import { AxiosResponse } from 'axios';
 
 export const getDogBreeds = (): Promise<string[]> => {

@@ -1,16 +1,12 @@
 import { Route, Routes } from 'react-router-dom';
 import { DogSearch } from './DogSearch';
 import Locator from './Locator';
-import { LocationProvider } from '@/features/search/contexts/LocationContext';
 
 export const SearchRoutes = () => {
-
   return (
-    <LocationProvider>
-      <Routes>
-        <Route path='' element={<Locator />} />
-        <Route path='/dog' element={<DogSearch />} />
-      </Routes>
-    </LocationProvider>
+    <Routes>
+      <Route path='/dog' element={<DogSearch />} />
+      <Route path='/' element={<Locator />} />
+    </Routes>
   );
 };

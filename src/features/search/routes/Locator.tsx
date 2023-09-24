@@ -1,41 +1,54 @@
 import { Box, Button, Text } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import { StatePicker } from '../components/StatePicker';
-import { Layout } from '../components/Layout';
 import { useNavigate } from 'react-router-dom';
-import { useLocationContext } from '@/features/search/contexts/LocationContext';
 import { MapContainer, Marker, Popup, Rectangle, TileLayer } from 'react-leaflet';
 import { DistancePicker } from '../components/DistancePicker';
 import { Map } from 'leaflet';
-import LocationSearchInput from '../components/LocationSearchInput';
+import SearchInput from '@/features/search/components/SearchInput';
+import { ContentLayout } from '@/components/Layout/ContentLayout';
+import useLocationStore from '../stores/locationStore';
+import { StateAbbreviation } from '../types/StateAbbreviation';
 
 const Locator = () => {
   const [map, setMap] = useState<Map | null>(null); // Get leaflet map instance
-  const { locationData, selectedState, selectedLocation } = useLocationContext();
+
+  const { selectedLocation, setSelectedLocationArea, selectedLocationArea } = useLocationStore((state) => ({
+    selectedLocation: state.selectedLocation,
+    searchDistance: state.searchDistance,
+    selectedState: state.selectedState as StateAbbreviation,
+    setSelectedLocationArea: state.setSelectedLocationArea,
+    selectedLocationArea: state.selectedLocationArea
+  }));
+
   const navigate = useNavigate();
 
+  console.count('Locator render');
+
   useEffect(() => {
-    if (!locationData) return;
+    console.log({selectedLocationArea})
+    if (!selectedLocationArea) return;
     if (map) {
-      const boundingBox = locationData.boundingBox;
+      const boundingBox = selectedLocationArea.boundingBox;
       map.fitBounds([
         [boundingBox.top_right.lat, boundingBox.top_right.lon],
         [boundingBox.bottom_left.lat, boundingBox.bottom_left.lon],
       ]);
     }
-  }, [locationData]);
+    setSelectedLocationArea(selectedLocationArea);
+  }, [selectedLocationArea]);
 
   return (
     <>
-      <Layout title='Locator' heading='Select a state and zip code'>
+      <ContentLayout title='Locator' heading='Select a state and zip code'>
         <Box className='w-full flex flex-col items-center mx-auto gap-3 max-w-2xl'>
           <div className='flex flex-col sm:flex-row w-full gap-2'>
             <DistancePicker className='flex-1' />
             <StatePicker className='flex-1' />
-            <LocationSearchInput />
+            <SearchInput />
           </div>
           {/* Location prompt */}
-          {locationData?.locations?.length && selectedLocation && (
+          {selectedLocationArea?.locations?.length && selectedLocation && (
             <Text mt={2} className='mt-5 text-lg'>
               You have selected{' '}
               <span className='font-semibold'>
@@ -48,7 +61,7 @@ const Locator = () => {
             bg={'blue.400'}
             color={'white'}
             _hover={{ bg: 'blue.500' }}
-            isDisabled={!locationData?.locations?.length}
+            isDisabled={!selectedLocationArea?.locations?.length}
             onClick={() => navigate('./dog')}
           >
             Continue
@@ -63,7 +76,7 @@ const Locator = () => {
                   : [33.456412, -86.801904]
               }
               zoom={10}
-              whenReady={() => console.log('Map ready')}
+              // whenReady={() => console.log('Map ready')}
               style={{ height: '400px', width: '100%' }}
               ref={setMap}
             >
@@ -72,14 +85,14 @@ const Locator = () => {
               {selectedLocation && (
                 <>
                   <Marker position={[selectedLocation.latitude, selectedLocation.longitude]}>
-                    <Popup>{`Locations to search: ${locationData?.locations?.length}`}</Popup>
+                    <Popup>{`Locations to search: ${selectedLocationArea?.locations?.length}`}</Popup>
                   </Marker>
                   (
-                  {locationData && (
+                  {selectedLocationArea && (
                     <Rectangle
                       bounds={[
-                        [locationData.boundingBox.top_right.lat, locationData.boundingBox.top_right.lon],
-                        [locationData.boundingBox.bottom_left.lat, locationData.boundingBox.bottom_left.lon],
+                        [selectedLocationArea.boundingBox.top_right.lat, selectedLocationArea.boundingBox.top_right.lon],
+                        [selectedLocationArea.boundingBox.bottom_left.lat, selectedLocationArea.boundingBox.bottom_left.lon],
                       ]}
                     ></Rectangle>
                   )}
@@ -89,7 +102,7 @@ const Locator = () => {
             </MapContainer>
           </div>
         </Box>
-      </Layout>
+      </ContentLayout>
     </>
   );
 };

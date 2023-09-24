@@ -21,5 +21,5 @@ export const AppRoutes = () => {
   ]
   const element = useRoutes([...authRoutes, ...commonRoutes, ...searchRoutes]);
 
-  return <>{element}</>;
+  return element;
 };

@@ -1,4 +1,4 @@
 export * from './api/dogService';
 export * from './api/locationService';
-export * from './types/types';
+export * from './types';
 export * from './routes';
