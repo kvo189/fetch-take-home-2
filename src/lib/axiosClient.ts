@@ -1,8 +1,7 @@
+import { FETCH_BASE_URL } from '@/config';
 
 import axios from 'axios';
 import history from '@/lib/history';
-
-const FETCH_BASE_URL = import.meta.env.VITE_FETCH_API;
 
 /** Pre-configured single instance of the API client and reused throughout the application*/ 
 const axiosClient = axios.create({

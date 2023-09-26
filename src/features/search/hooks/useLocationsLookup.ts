@@ -39,8 +39,6 @@ export const useLocationsLookup = ({ searchParams, config }: UseLocationsLookupO
       );
     }
 
-    console.log('searching Locations with params', searchParams);
-
     // Adjusting to meet the API expectations
     const apiSearchParams = { ...searchParams, city: searchParams.searchTerm };
     return searchLocations(apiSearchParams).then((locations) => {
@@ -62,8 +60,6 @@ export const useLocationsLookup = ({ searchParams, config }: UseLocationsLookupO
         b.score - a.score ||
         a.locations[0].city.localeCompare(b.locations[0].city)
       );
-
-      console.log(scoredGroups.map((group) => ({ city: group.locations[0].city, len: group.locations.length, score: group.score })))
 
       // Limit the results to 20
       const refinedGroups = scoredGroups.slice(0, 20).map((scoredGroup) => scoredGroup.locations);

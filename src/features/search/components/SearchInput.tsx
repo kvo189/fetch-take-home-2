@@ -16,13 +16,15 @@ const SearchInput = ({ className }: LocationSearchInputProps) => {
   const isMount = useIsMount();
   const [searchInput, setSearchInput] = useState<string>('');
   const debouncedSearchInput = useDebounce(searchInput, 300);
-  const { selectedState, selectedLocation, setSelectedLocation, searchDistance, setSelectedLocationArea } = useLocationStore((state) => ({
-    selectedState: state.selectedState,
-    selectedLocation: state.selectedLocation,
-    setSelectedLocation: state.setSelectedLocation,
-    searchDistance: state.searchDistance,
-    setSelectedLocationArea: state.setSelectedLocationArea,
-  }));
+  const { selectedState, selectedLocation, setSelectedLocation, searchDistance, setSelectedLocationArea } = useLocationStore(
+    (state) => ({
+      selectedState: state.selectedState,
+      selectedLocation: state.selectedLocation,
+      setSelectedLocation: state.setSelectedLocation,
+      searchDistance: state.searchDistance,
+      setSelectedLocationArea: state.setSelectedLocationArea,
+    })
+  );
 
   const { data: locations, isLoading } = useLocationsLookup({
     searchParams: { states: selectedState ? [selectedState] : undefined, searchTerm: debouncedSearchInput, size: 10000 },
@@ -40,16 +42,14 @@ const SearchInput = ({ className }: LocationSearchInputProps) => {
   }, []);
 
   useEffect(() => {
-    console.log({selectedLocationArea})
     if (!selectedLocationArea) return;
     setSelectedLocationArea(selectedLocationArea);
   }, [selectedLocationArea]);
 
   useEffect(() => {
-    if (isMount)  return;
+    if (isMount) return;
     setSearchInput('');
   }, [selectedState]);
-
 
   return (
     <Downshift

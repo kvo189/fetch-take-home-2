@@ -1,6 +1,6 @@
 import { FETCH_BASE_URL } from '@/config';
 import axiosClient from '@/lib/axiosClient';
-import { LocationSearchQuery, LocationSearchResult, ZipCode, Location } from '../types';
+import { LocationSearchQuery, LocationSearchResult, Location } from '../types';
 import { AxiosResponse } from 'axios';
 
 export const getLocationsByZIPCodes = (zipCodes: string[]): Promise<Location[]> => {

@@ -1,1 +1,1 @@
-export const FETCH_BASE_URL = import.meta.env.VITE_FETCH_API as string;
+export const FETCH_BASE_URL = process.env.VITE_FETCH_API;

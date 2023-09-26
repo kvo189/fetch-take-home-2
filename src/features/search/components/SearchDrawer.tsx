@@ -24,9 +24,6 @@ export const SearchDrawer = ({ header, Body, Footer, drawerText }: SearchDrawerP
   const { isOpen, onOpen, onClose } = useDisclosure();
   const isDrawer = useBreakpointValue({ base: true, lg: false });
 
-  // const BodyComponent = <div style={{ display: isDrawer ? 'none' : 'block' }}>{Body}</div>;
-  // const FooterComponent = <div style={{ display: isDrawer ? 'none' : 'block' }}>{Footer}</div>;
-
   return (
     <>
       {isDrawer ? (
@@ -50,13 +47,6 @@ export const SearchDrawer = ({ header, Body, Footer, drawerText }: SearchDrawerP
           </div>
         </VStack>
       )}
-
-      {/* <VStack spacing={2} alignItems={'center'} maxHeight={'100vh'}>
-        <div className='sticky top-0 flex flex-col items-center justify-center p-4'>
-          {Body}
-          {Footer}
-        </div>
-      </VStack> */}
     </>
   );
 };

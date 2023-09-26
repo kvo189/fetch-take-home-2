@@ -36,7 +36,7 @@ const Slider = ({ handleSliderChange, min, max, className, selectedValues }: Sli
   };
   const renderMark = (props: any): JSX.Element => {
     let style: React.CSSProperties = props.style;
-    style = { ...style, transform: 'translateX(6px)' };
+    style = { ...style, transform: 'translateX(6px)', zIndex: -1 };
     return <div {...props} style={style} />;
   };
   return (
@@ -46,11 +46,11 @@ const Slider = ({ handleSliderChange, min, max, className, selectedValues }: Sli
       </div>
       <div className='py-1'>
         <ReactSlider
-          className={`h-4 rounded-full z-20`}
+          className={`h-4 rounded-full`}
           marks
           markClassName='h-4 w-1 bg-gray-200 rounded-full'
-          trackClassName={`h-2 translate-y-1/2 bg-gray-200 inline-block z-10 track`}
-          thumbClassName={`w-4 h-4 rounded-full cursor-grab !z-20 bg-white shadow-lg thumb`}
+          trackClassName={`h-2 translate-y-1/2 bg-gray-200 inline-block track`}
+          thumbClassName={`w-4 h-4 rounded-full cursor-grab bg-white shadow-lg thumb`}
           renderTrack={renderTrack}
           renderThumb={renderThumb}
           renderMark={renderMark}
