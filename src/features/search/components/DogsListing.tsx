@@ -1,4 +1,4 @@
-import { AspectRatio, Box, Button, Center, Image, SimpleGrid, Text } from '@chakra-ui/react';
+import { Box, Button, SimpleGrid, Text } from '@chakra-ui/react';
 import { Dog } from '../types';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import useDogsStore from '../stores/dogsStore';
