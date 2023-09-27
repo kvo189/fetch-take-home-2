@@ -81,8 +81,8 @@ This web application, built for dog lovers, enables users to search through a da
    ```
 
 ## Links
-- Deployed Site
-- Public Repository
+- Deployed Site: https://fetch-take-home-2.vercel.app/
+- Public Repository: https://github.com/kvo189/fetch-take-home-2
 
 ## Project Structure 🏗
 
