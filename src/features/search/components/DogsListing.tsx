@@ -2,12 +2,14 @@ import { AspectRatio, Box, Button, Center, Image, SimpleGrid, Text } from '@chak
 import { Dog } from '../types';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import useDogsStore from '../stores/dogsStore';
+import { DogCard } from './DogCard';
 
 interface DogsListingProps {
   dogs: Dog[];
+  loading: boolean;
 }
 
-export const DogsListing = ({ dogs }: DogsListingProps) => {
+export const DogsListing = ({ dogs, loading }: DogsListingProps) => {
   const { favoriteDogIds, toggleFavorite } = useDogsStore();
 
   return (
@@ -26,43 +28,12 @@ export const DogsListing = ({ dogs }: DogsListingProps) => {
               )}
             </Button>
           </Box>
-          <Center>
-            <Box width='100%'>
-              <AspectRatio ratio={1}>
-                <Image src={dog.img} alt={dog.name} width='100%' height='100%' objectFit={'cover'} borderTopRadius='lg' />
-              </AspectRatio>
-            </Box>
-          </Center>
-          <Box p={4}>
-            <Text className='font-bold'>{dog.name}</Text>
-            <Text>{dog.breed}</Text>
-            <Text>{dog.age} years old</Text>
-            <Text>ZIP: {dog.zip_code}</Text>
-            {dog.distance && <Text>{dog.distance} miles away</Text>}
-          </Box>
+          <DogCard dog={dog}></DogCard>
         </Box>
       ))}
+      {dogs.length === 0 && !loading && <Text>No dogs found</Text>}
     </SimpleGrid>
   );
 };
 
-export const DogCard = ({ dog }: { dog: Dog }) => {
-  return (
-    <>
-      <Center>
-        <Box width='100%'>
-          <AspectRatio ratio={1}>
-            <Image src={dog.img} alt={dog.name} width='100%' height='100%' objectFit={'cover'} borderTopRadius='lg' />
-          </AspectRatio>
-        </Box>
-      </Center>
-      <Box p={4}>
-        <Text className='font-bold'>{dog.name}</Text>
-        <Text>{dog.breed}</Text>
-        <Text>{dog.age} years old</Text>
-        <Text>ZIP: {dog.zip_code}</Text>
-        {dog.distance && <Text>{dog.distance} miles away</Text>}
-      </Box>
-    </>
-  );
-};
+export { DogCard };

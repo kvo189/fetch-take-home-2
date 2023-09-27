@@ -165,7 +165,7 @@ export const DogSearch = () => {
             setCurrentPage={setCurrentSearchPage}
             pagination={showFavoritesOnly ? favoritePagination : pagination}
           ></Pagination>
-          <DogsListing dogs={showFavoritesOnly ? favoriteDogs : dogs}></DogsListing>
+          <DogsListing dogs={showFavoritesOnly ? favoriteDogs : dogs} loading={isFavoritesLoading || isLoadingDogs}></DogsListing>
 
           {(isLoadingDogs || isFavoritesLoading) && (
             <div

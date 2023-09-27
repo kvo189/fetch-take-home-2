@@ -25,8 +25,7 @@ const BreedsSelector = ({onBreedsChange }: BreedsSelectorProps) => {
     }
   };
 
-  if (isLoading) return 'Loading...';
-  if (error) return 'An error occurred!';
+  if (error) return <div>Failed to fetch dog breeds</div>
 
   const options = breeds.map((breed) => ({ value: breed, label: breed })); // Assuming breeds is an array of strings
 
@@ -38,7 +37,7 @@ const BreedsSelector = ({onBreedsChange }: BreedsSelectorProps) => {
         <Select
           isMulti
           name='colors'
-          options={options}
+          options={!isLoading ? options : []}
           placeholder='Select breeds...'
           closeMenuOnSelect={false}
           className='z-[11] lg:w-[300px] lg:max-w-[300px] p-0'
