@@ -1,9 +1,6 @@
 import { useQuery } from 'react-query';
 import { ExtractFnReturnType, QueryConfig } from '@/lib/react-query';
-import axiosClient from '@/lib/axiosClient';
-import { GeoBoundingBox, Location } from '@/features/search/types';
-import { FETCH_BASE_URL } from '@/config';
-import { AxiosResponse } from 'axios';
+import { Location } from '@/features/search/types';
 import { getSuggestedZipCodes } from '@/features/search/utils/getSuggestedZipcodes';
 import { findLocationClosestToCenter } from '../utils/findLocationClosestToCenter';
 import { getLocationsByZIPCodes, searchLocations } from '@/features/search'

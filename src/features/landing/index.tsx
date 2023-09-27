@@ -28,9 +28,6 @@ export default function Landing() {
             <Button variant={'a'} color={'white'} onClick={handleStart} colorScheme={'blue'} bg={'blue.400'} rounded={'full'} px={6} _hover={{ bg: 'blue.500' }}>
               Get Started
             </Button>
-            <Button variant={'link'} colorScheme={'blue'} size={'sm'}>
-              Learn more
-            </Button>
             <Box>
               <Icon as={Arrow} color={useColorModeValue('gray.800', 'gray.300')} w={71} position={'absolute'} right={-71} top={'10px'} />
               <Text fontSize={'lg'} fontFamily={'Caveat'} position={'absolute'} right={'-125px'} top={'-15px'} transform={'rotate(10deg)'}>

@@ -28,14 +28,14 @@ export const SearchDrawer = ({ header, Body, Footer, drawerText }: SearchDrawerP
     <>
       {isDrawer ? (
         <>
-          <Button onClick={onOpen}>{drawerText}</Button>
+          <Button colorScheme='blue' variant='solid' onClick={onOpen} className='flex-none'>{drawerText}</Button>
           <Drawer placement='left' onClose={onClose} isOpen={isOpen}>
             <DrawerOverlay />
             <DrawerContent>
               <DrawerCloseButton />
               <DrawerHeader>{header}</DrawerHeader>
               <DrawerBody>{Body}</DrawerBody>
-              <DrawerFooter>{Footer}</DrawerFooter>
+              <DrawerFooter className="flex items-center justify-center !py-8">{Footer}</DrawerFooter>
             </DrawerContent>
           </Drawer>
         </>

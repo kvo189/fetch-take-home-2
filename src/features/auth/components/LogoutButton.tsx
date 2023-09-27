@@ -7,7 +7,6 @@ interface LogoutButtonProps {
 export const LogoutButton = ({ onLogout }: LogoutButtonProps) => {
 
   const handleLogout = () => {
-    console.log('LOGGING OUT');
     logout()
       .then(() => {
         onLogout();  // Invoke the onLogout function passed in as a prop

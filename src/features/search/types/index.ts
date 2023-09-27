@@ -12,6 +12,7 @@ export interface Dog {
     zip_code: string;
     breed: string;
     distance?: number;
+    favorite?: boolean;
 }
 
 export interface DogSearchQuery {

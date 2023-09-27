@@ -1,6 +1,5 @@
 import { Flex, useColorModeValue } from '@chakra-ui/react';
 import { Head } from '@/components/Head/Head';
-import { useEffect } from 'react';
 
 type ContentLayoutProps = {
   children: React.ReactNode;
@@ -11,10 +10,6 @@ type ContentLayoutProps = {
 };
 
 export const ContentLayout = ({ id, title, children, heading, headingClassName }: ContentLayoutProps) => {
-  useEffect(() => {
-    console.log(title, 'Content layout mounted');
-  }, []);
-
   return (
     <>
       <Head title={title}></Head>

@@ -22,7 +22,7 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, setCurrentPage, pa
             {calculatePageEndIndex(currentPage, pagination.pageSize, pagination.totalResults)} of {pagination.totalResults}{' '}
             available dogs
           </div>
-          <div className='flex gap-4'>
+          <div className='flex gap-4 justify-center'>
             <Button onClick={() => currentPage > 0 && setCurrentPage((page) => page - 1)}>Prev</Button>
             <Select
               maxW={'100px'}

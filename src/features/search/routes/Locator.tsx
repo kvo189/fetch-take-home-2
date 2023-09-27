@@ -8,25 +8,26 @@ import { Map } from 'leaflet';
 import SearchInput from '@/features/search/components/SearchInput';
 import { ContentLayout } from '@/components/Layout/ContentLayout';
 import useLocationStore from '../stores/locationStore';
-import { StateAbbreviation } from '../types/StateAbbreviation';
+import { useLocationsWithinDistance } from '../hooks/useLocationWithinDistance';
 
 const Locator = () => {
   const [map, setMap] = useState<Map | null>(null); // Get leaflet map instance
 
-  const { selectedLocation, setSelectedLocationArea, selectedLocationArea } = useLocationStore((state) => ({
+  const { selectedLocation, setSelectedLocationArea, selectedLocationArea, searchDistance } = useLocationStore((state) => ({
     selectedLocation: state.selectedLocation,
     searchDistance: state.searchDistance,
-    selectedState: state.selectedState as StateAbbreviation,
     setSelectedLocationArea: state.setSelectedLocationArea,
-    selectedLocationArea: state.selectedLocationArea
+    selectedLocationArea: state.selectedLocationArea,
   }));
+
+  const { isLoading: isLoadingLocationsWithinDist } = useLocationsWithinDistance({
+    location: selectedLocation,
+    distance: searchDistance,
+  });
 
   const navigate = useNavigate();
 
-  console.count('Locator render');
-
   useEffect(() => {
-    console.log({selectedLocationArea})
     if (!selectedLocationArea) return;
     if (map) {
       const boundingBox = selectedLocationArea.boundingBox;
@@ -48,12 +49,17 @@ const Locator = () => {
             <SearchInput />
           </div>
           {/* Location prompt */}
-          {selectedLocationArea?.locations?.length && selectedLocation && (
+          {selectedLocationArea?.locations?.length && selectedLocation && !isLoadingLocationsWithinDist && (
             <Text mt={2} className='mt-5 text-lg'>
               You have selected{' '}
               <span className='font-semibold'>
                 {selectedLocation.city}, {selectedLocation.state}
               </span>
+            </Text>
+          )}
+          {isLoadingLocationsWithinDist && (
+            <Text mt={2} className='mt-5 text-lg'>
+              Finding selected location...
             </Text>
           )}
           {/* Continue button */}
@@ -67,7 +73,6 @@ const Locator = () => {
             Continue
           </Button>
           {/* Map */}
-          {selectedLocation?.latitude} {selectedLocation?.longitude}
           <div className='w-full relative'>
             <MapContainer
               center={
@@ -76,7 +81,6 @@ const Locator = () => {
                   : [33.456412, -86.801904]
               }
               zoom={10}
-              // whenReady={() => console.log('Map ready')}
               style={{ height: '400px', width: '100%' }}
               ref={setMap}
             >

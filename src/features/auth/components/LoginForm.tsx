@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, FormControl, FormLabel, Input, Checkbox, Stack, Button, useColorModeValue } from '@chakra-ui/react';
+import { Box, FormControl, FormLabel, Input, Checkbox, Stack, Button, useColorModeValue, useToast } from '@chakra-ui/react';
 import { loginWithNameAndEmail } from '../api/authService';
 
 type LoginFormProps = {
@@ -10,6 +10,8 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [rememberMe, setRememberMe] = useState(false); // Added rememberMe state
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
   // Load saved values from local storage on component mount
   useEffect(() => {
@@ -25,13 +27,22 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const loginDisabled = email === '' || name === '';
 
   const handleLogin = () => {
-    console.log('LOGGING IN');
     if (loginDisabled) {
       return alert('Please fill in your name and email address.');
     }
+    setIsLoading(true); // Set loading to true when login starts
     loginWithNameAndEmail({ name, email })
       .then(() => onLoginSuccess())
-      .catch((error: any) => console.error('Error logging in:', error)); // TODO: handle error properly
+      .catch((error: any) => {
+        toast({
+          title: 'Sign In Error',
+          description: error.message || 'Failed to sign in. Please try again.', // or a generic message if error.message is undefined
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      })
+      .finally(() => setIsLoading(false));
   };
 
   const onLoginSuccess = () => {
@@ -51,7 +62,7 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   };
 
   return (
-    <Box id='login-form' rounded={'lg'} bg={useColorModeValue('white', 'gray.700')} boxShadow={'lg'} p={8} >
+    <Box id='login-form' rounded={'lg'} bg={useColorModeValue('white', 'gray.700')} boxShadow={'lg'} p={8}>
       <Stack spacing={4}>
         <FormControl id='name'>
           <FormLabel>Name</FormLabel>
@@ -76,7 +87,16 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
               Remember me
             </Checkbox>
           </Stack>
-          <Button bg={'blue.400'} color={'white'} _hover={{ bg: 'blue.500' }} onClick={handleLogin} isDisabled={loginDisabled}>
+          <Button
+            bg={'blue.400'}
+            color={'white'}
+            _hover={{ bg: 'blue.500' }}
+            onClick={handleLogin}
+            isDisabled={loginDisabled}
+            isLoading={isLoading}
+            loadingText='Signing in...'
+            colorScheme='blue'
+          >
             Sign in
           </Button>
         </Stack>

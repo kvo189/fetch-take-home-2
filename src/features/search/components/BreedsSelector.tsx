@@ -41,7 +41,7 @@ const BreedsSelector = ({onBreedsChange }: BreedsSelectorProps) => {
           options={options}
           placeholder='Select breeds...'
           closeMenuOnSelect={false}
-          className='z-[11] w-[300px] max-w-[300px] p-0'
+          className='z-[11] lg:w-[300px] lg:max-w-[300px] p-0'
           // @ts-ignore
           selectedOptionStyle='check'
           hideSelectedOptions={false}

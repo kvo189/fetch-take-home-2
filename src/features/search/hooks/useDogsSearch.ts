@@ -1,13 +1,12 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery } from 'react-query';
 import { DogSearchQuery } from '../types';
 import { getDogSearchResults, getDogsByIds } from '../api/dogService';
 import { sortDogsByDistance } from '../utils/sortDogsByDistance';
 import { LocationArea } from '../stores/locationStore';
 
-export const useDogsSearch = (filters: DogSearchQuery, sorting: string, currentPage: number, selectedLocationArea: LocationArea | null) => {
+export const useDogsSearch = (filters: DogSearchQuery, sorting: string, currentPage: number, selectedLocationArea: LocationArea | null, shouldSearch: boolean ) => {
   const [pagination, setPagination] = useState({ currentPageResults: 0, pageSize: 25, totalPage: 0, totalResults: 0 });
-  // Add a new state to keep track of the search count
   const [searchCount, setSearchCount] = useState(0);
 
   const fetchData = useCallback(async () => {
@@ -44,18 +43,17 @@ export const useDogsSearch = (filters: DogSearchQuery, sorting: string, currentP
 
     setSearchCount((count) => count + 1);
     return dogsResponse;
-  }
-    , [filters.ageMin, filters.ageMax, filters.breeds, sorting, currentPage, selectedLocationArea]);
-
-  // Keep everything as is, and only add the following state
+  }, [filters.ageMin, filters.ageMax, filters.breeds, sorting, currentPage, selectedLocationArea]);
 
   const {
     data: dogs = [],
     error,
     refetch: handleSearch, // used to refetch the data whenever desired.
+    isLoading,
   } = useQuery(['dogsSearch', filters, sorting, currentPage, selectedLocationArea], fetchData, {
     keepPreviousData: true, // keep displaying the old data until the new data comes in when we re-run the query.
     refetchOnWindowFocus: false, // disable refetching when the window is focused.
+    enabled: shouldSearch,
   });
 
 
@@ -64,6 +62,7 @@ export const useDogsSearch = (filters: DogSearchQuery, sorting: string, currentP
     searchCount,
     pagination,
     error,
-    handleSearch
+    handleSearch,
+    isLoading,
   };
 };

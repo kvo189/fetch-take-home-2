@@ -2,8 +2,7 @@ import { useQuery } from 'react-query';
 import { Location, searchLocations } from '..';
 import { getBoundingBox } from '../utils/getBoundingBox';
 import { calculateDistance } from '../utils/calculateDistance';
-import { StateAbbreviation } from '../types/StateAbbreviation';
-import useLocationStore, { LocationArea } from '@/features/search/stores/locationStore';
+import { LocationArea } from '@/features/search/stores/locationStore';
 
 export interface SearchAreaParams {
   location: Location | null;

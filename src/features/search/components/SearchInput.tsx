@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Input, Box, List, ListItem } from '@chakra-ui/react';
+import { Input, Box, List, ListItem, Spinner } from '@chakra-ui/react';
 import { useDebounce } from '@uidotdev/usehooks';
 import Downshift from 'downshift';
 import { useLocationsLookup } from '../hooks/useLocationsLookup';
 import { useIsMount } from '@/hooks/useIsMount';
 import useLocationStore from '../stores/locationStore';
 import { useLocationsWithinDistance } from '../hooks/useLocationWithinDistance';
-import { StateAbbreviation } from '../types/StateAbbreviation';
+
 
 type LocationSearchInputProps = {
   className?: string;
@@ -26,7 +26,7 @@ const SearchInput = ({ className }: LocationSearchInputProps) => {
     })
   );
 
-  const { data: locations, isLoading } = useLocationsLookup({
+  const { data: locations, isLoading: isLoadingSuggestions } = useLocationsLookup({
     searchParams: { states: selectedState ? [selectedState] : undefined, searchTerm: debouncedSearchInput, size: 10000 },
   });
 
@@ -68,8 +68,11 @@ const SearchInput = ({ className }: LocationSearchInputProps) => {
               id: 'input-search-location',
               bg: 'white',
             })}
+            className='relative'
           />
 
+            
+          {isLoadingSuggestions && <Spinner className='absolute z-[5000] right-2 top-1/2 translate-y-1/2' emptyColor='gray.200' color='blue.500'></Spinner>}
           <List
             {...getMenuProps()}
             className='absolute z-[5000] rounded max-h-52 overflow-y-auto cursor-pointer w-full bg-white'
@@ -88,8 +91,9 @@ const SearchInput = ({ className }: LocationSearchInputProps) => {
                   {location.suggestionText}
                 </ListItem>
               ))}
-            {isOpen && !isLoading && locations?.length === 0 && <div>No locations found</div>}
+            {isOpen && !isLoadingSuggestions && locations?.length === 0 && <div>No locations found</div>}
           </List>
+
         </Box>
       )}
     </Downshift>

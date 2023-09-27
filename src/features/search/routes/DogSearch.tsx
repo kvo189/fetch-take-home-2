@@ -1,5 +1,22 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, Box } from '@chakra-ui/react';
+import {
+  Button,
+  Box,
+  Spinner,
+  FormControl,
+  FormLabel,
+  Switch,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Text,
+  useToast,
+} from '@chakra-ui/react';
 import { DogSearchQuery } from '../types';
 import Slider from '../components/Slider';
 import { StatePicker } from '../components/StatePicker';
@@ -12,6 +29,11 @@ import { DogsListing } from '../components/DogsListing';
 import Pagination from '../components/Pagination';
 import SortSelector from '../components/SortSelector';
 import { useDogsSearch } from '../hooks/useDogsSearch';
+import { useFavoriteDogs } from '../hooks/useFavoriteDogs';
+import useDogsStore from '../stores/dogsStore';
+import { Head } from '@/components/Head/Head';
+import { getMatchedDog } from '..';
+import { useNavigate } from 'react-router';
 
 interface FilterProps {
   searchCount: number;
@@ -24,23 +46,83 @@ interface FilterProps {
 }
 
 export const DogSearch = () => {
+  const toast = useToast();
+  const navigate = useNavigate();
   const { selectedLocationArea } = useLocationStore((state) => ({
     selectedLocationArea: state.selectedLocationArea,
   }));
   const [filters, setFilters] = useState<DogSearchQuery>({ breeds: [], ageMin: undefined, ageMax: undefined });
-  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [currentSearchPage, setCurrentSearchPage] = useState<number>(0);
   const [sorting, setSorting] = useState<string>('breed:asc');
-  const { dogs, pagination, handleSearch, searchCount } = useDogsSearch(filters, sorting, currentPage, selectedLocationArea);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const { favoriteDogIds } = useDogsStore();
+  const {
+    favoriteDogs,
+    favoritePagination,
+    isLoading: isFavoritesLoading,
+    error: favDogsError,
+  } = useFavoriteDogs(favoriteDogIds, filters, sorting, currentSearchPage);
 
-  // const searchCount = 0;
-
-  useEffect(() => {
-    console.log(currentPage, 'changed page', pagination, 'pagination');
-  }, [currentPage, pagination]);
+  const {
+    dogs,
+    pagination,
+    handleSearch,
+    searchCount,
+    isLoading: isLoadingDogs,
+    error: searchDogsError,
+  } = useDogsSearch(filters, sorting, currentSearchPage, selectedLocationArea, !showFavoritesOnly);
 
   const handleSliderChange = useCallback((value: number[]) => {
     setFilters((prevFilters) => ({ ...prevFilters, ageMin: value[0], ageMax: value[1] }));
   }, []);
+
+  useEffect(() => {
+    setCurrentSearchPage(0);
+  }, [selectedLocationArea, showFavoritesOnly]);
+
+  useEffect(() => {
+    if (!searchDogsError || favDogsError) return;
+    const title = 'Search Error';
+    const desc =
+      (searchDogsError ? (searchDogsError as unknown as Error)?.message : (favDogsError as unknown as Error)?.message) ||
+      'Failed to fetch dogs';
+
+    toast({
+      title: title,
+      description: desc,
+      status: 'error',
+      duration: 5000,
+      isClosable: true,
+    });
+  }, [searchDogsError, favDogsError, toast]);
+
+  const handleFavoriteOnly = () => {
+    setShowFavoritesOnly(!showFavoritesOnly);
+  };
+
+  const handleFindMatch = () => {
+    getMatchedDog(favoriteDogIds)
+      .then((matchId) => {
+        const matchedDog = favoriteDogs.find((dog) => dog.id === matchId);
+        if (!matchedDog) {
+          throw new Error('No match found.');
+        }
+        // Store matched dog in localStorage
+        localStorage.setItem('matchedDog', JSON.stringify(matchedDog));
+
+        // Redirect to /match
+        navigate('../match');
+      })
+      .catch((error) => {
+        toast({
+          title: 'Matching Error',
+          description: `Cannot find match - ${error.message || 'No match found.'}`,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+      });
+  };
 
   const filterProps = useMemo(
     () => ({
@@ -56,18 +138,48 @@ export const DogSearch = () => {
   );
 
   return (
-    <Box id='div-dog-search-container' className='w-full flex flex-col lg:flex-row mx-auto gap-3 p-4'>
-      <SearchDrawer
-        header='Search filters'
-        drawerText='Filter search'
-        Body={<FiltersContent filterProps={filterProps} />}
-        Footer={<FiltersContentFooter filterProps={filterProps} />}
-      ></SearchDrawer>
-      <div className='flex flex-col w-full gap-4'>
-        <Pagination currentPage={currentPage} setCurrentPage={setCurrentPage} pagination={pagination}></Pagination>
-        <DogsListing dogs={dogs || []}></DogsListing>
-      </div>
-    </Box>
+    <>
+      <Head title='Dog Search' description='Find your favorite dog for adoption!'></Head>
+      <Box
+        id='div-dog-search-container'
+        className={`relative w-full flex flex-col lg:flex-row mx-auto gap-3 p-4 ${
+          (isLoadingDogs || isFavoritesLoading) && 'h-screen overflow-hidden'
+        }`}
+      >
+        <SearchDrawer
+          header='Search filters'
+          drawerText='Filter search'
+          Body={<FiltersContent filterProps={filterProps} />}
+          Footer={
+            <FiltersContentFooter
+              handleSearch={handleSearch}
+              handleFavoriteOnly={handleFavoriteOnly}
+              showFavoritesOnly={showFavoritesOnly}
+              handleFindMatch={handleFindMatch}
+            />
+          }
+        ></SearchDrawer>
+        <div className='flex flex-col w-full gap-4 relative p-4'>
+          <Pagination
+            currentPage={currentSearchPage}
+            setCurrentPage={setCurrentSearchPage}
+            pagination={showFavoritesOnly ? favoritePagination : pagination}
+          ></Pagination>
+          <DogsListing dogs={showFavoritesOnly ? favoriteDogs : dogs}></DogsListing>
+
+          {(isLoadingDogs || isFavoritesLoading) && (
+            <div
+              id='dog-search-overlay'
+              className='absolute w-screen h-screen -left-4 lg:w-[105%] lg:left-0 lg:-top-4 bg-black z-20 opacity-50 '
+            >
+              <div id='LOADER' className='absolute top-1/2 left-1/2 -translate-1/2'>
+                <Spinner thickness='4px' speed='0.65s' emptyColor='gray.200' color='blue.500' size='xl' />
+              </div>
+            </div>
+          )}
+        </div>
+      </Box>
+    </>
   );
 };
 
@@ -109,11 +221,58 @@ const FiltersContent: React.FC<{ filterProps: FilterProps }> = ({ filterProps })
   );
 };
 
-const FiltersContentFooter: React.FC<{ filterProps: FilterProps }> = ({ filterProps }) => {
-  const { handleSearch } = filterProps;
+const FiltersContentFooter = ({
+  handleSearch,
+  handleFavoriteOnly,
+  showFavoritesOnly,
+  handleFindMatch,
+}: {
+  handleSearch: () => void;
+  handleFavoriteOnly: () => void;
+  handleFindMatch: () => void;
+  showFavoritesOnly: boolean;
+}) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   return (
-    <Button onClick={handleSearch} className='mx-auto'>
-      Search
-    </Button>
+    <Box className='flex flex-col w-full gap-6'>
+      <FormControl className='flex items-center justify-center'>
+        <FormLabel htmlFor='favorite-only-switch' mb='0'>
+          Show favorites only?
+        </FormLabel>
+        <Switch id='favorite-only-switch' isChecked={showFavoritesOnly} onChange={handleFavoriteOnly} />
+      </FormControl>
+      <Box className='flex justify-between'>
+        <Button colorScheme={'blue'} onClick={handleSearch} className='mx-auto'>
+          Search
+        </Button>
+        <Button colorScheme={'blue'} onClick={onOpen} className='mx-auto'>
+          Find Match
+        </Button>
+
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Find Your Perfect Match!</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Text>
+                You've selected some adorable dogs as your favorites. Let’s find out which one is your ideal match for
+                adoption! By clicking <b>Find My Match</b>, a special match will be made from your list of favorited dogs,
+                leading you one step closer to finding your perfect companion. Ready to meet your match?
+              </Text>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button colorScheme='blue' variant={'outline'} mr={3} onClick={onClose}>
+                Close
+              </Button>
+              <Button colorScheme='blue' onClick={handleFindMatch}>
+                Find My Match
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </Box>
+    </Box>
   );
 };

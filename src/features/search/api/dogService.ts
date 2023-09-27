@@ -18,7 +18,7 @@ export const getDogsByIds = (dogIds: string[]): Promise<Dog[]> => {
     .then((response: AxiosResponse<Dog[]>) => response.data);
 }
 
-export const getMatchedDog = (dogIds: string[]): Promise<Match> => {
+export const getMatchedDog = (dogIds: string[]): Promise<string> => {
   return axiosClient.post(`${FETCH_BASE_URL}/dogs/match`, dogIds)
-    .then((response: AxiosResponse<Match>) => response.data);
+    .then((response: AxiosResponse<Match>) => response.data.match);
 }
