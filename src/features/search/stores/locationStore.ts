@@ -68,6 +68,29 @@ const locationStateCreator: StateCreator<LocationState> = (set) => ({
 
 });
 
+/**
+ * `useLocationStore` State Store
+ * 
+ * This store manages location-specific states, including selected location, search distance, and associated boundaries.
+ * 
+ * State Attributes:
+ * - `selectedLocation`: Currently selected location, or null if none is selected.
+ * - `selectedLocationArea`: An object containing:
+ *   - `locations`: An array of locations within a given area.
+ *   - `boundingBox`: The boundary box of those locations.
+ * - `searchDistance`: Distance radius for a location-based search.
+ * - `selectedState`: The state abbreviation of the currently selected location.
+ * 
+ * Actions:
+ * - `setSelectedLocation`: Updates the `selectedLocation` state. Resets `selectedLocationArea` if the new location is null. Adjusts the effective search distance and updates the `selectedState` if not already set.
+ * - `setSelectedLocationArea`: Updates the `selectedLocationArea` state, which includes both the locations and their bounding box. Ensures that the `selectedState` remains consistent if a location area is defined.
+ * - `setSearchDistance`: Updates the `searchDistance` state. Resets `selectedState` if the search distance is 0.
+ * - `setSelectedState`: Updates the `selectedState` state. If the state string is empty, it resets other relevant states like `selectedLocation` and `selectedLocationArea`.
+ * 
+ * Dependencies:
+ * - Uses `zustand` for state management.
+ * - Leverages various type definitions like `Location`, `BottomLeftTopRight`, and `StateAbbreviation` for type safety.
+ */
 const useLocationStore = create(locationStateCreator);
 
 export default useLocationStore;

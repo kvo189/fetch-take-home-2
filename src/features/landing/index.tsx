@@ -2,9 +2,16 @@ import { Box, Heading, Container, Text, Button, Stack, Icon, useColorModeValue, 
 import { useNavigate } from 'react-router';
 import { Head } from '@/components/Head/Head';
 
+/**
+ * Landing component displays the introduction and entry point for users to discover dogs.
+ */
 export default function Landing() {
-  const navigate = useNavigate();
-
+  const navigate = useNavigate(); // Hook to programmatically navigate.
+  
+  /**
+   * Handle the click event for the "Get Started" button.
+   * Redirects the user to the login page.
+   */
   const handleStart = () => {
     navigate('/auth/login');
   };

@@ -4,6 +4,14 @@ interface LogoutButtonProps {
   onLogout: () => void;
 }
 
+/**
+ * LogoutButton Component.
+ * 
+ * Provides a button to allow users to log out.
+ * 
+ * Props:
+ * - `onLogout`: Callback executed after successful logout.
+ */
 export const LogoutButton = ({ onLogout }: LogoutButtonProps) => {
 
   const handleLogout = () => {

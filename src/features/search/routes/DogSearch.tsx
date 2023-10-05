@@ -44,7 +44,30 @@ interface FilterProps {
   handleSliderChange: (value: number[]) => void;
   handleSearch: () => void;
 }
-
+/**
+ * The DogSearch component allows users to search for dogs based on various filters.
+ * Features:
+ * - Displaying the number of search results.
+ * - A search drawer for filters (Mobile only).
+ * - Lists dogs based on applied filters.
+ * - Option to view only favorite dogs.
+ * - Finding a matched dog from the list of favorites.
+ *
+ * The component uses various hooks and states to manage the search process and results, 
+ * handle errors, and navigate between routes. The `useDogsSearch` and `useFavoriteDogs` hooks, 
+ * for instance, provide the dogs' data and favorite dogs respectively. User interactions such 
+ * as changing filter settings or toggling between regular search and favorites only, update 
+ * the component's local state, and subsequently the search results.
+ *
+ * Key States and Props:
+ * - filters: Store the search filters, e.g., breeds, age range.
+ * - currentSearchPage: Manages pagination.
+ * - showFavoritesOnly: Toggles between showing all dogs or only favorites.
+ * - dogs and favoriteDogs: Arrays containing the dog results based on the applied filters.
+ * - handleSliderChange: Callback for age range slider adjustments.
+ * - handleSearch: Function to initiate the search based on the applied filters.
+ * - ...and various other props for the sub-components like FiltersContent and FiltersContentFooter.
+ */
 export const DogSearch = () => {
   const toast = useToast();
   const navigate = useNavigate();
@@ -72,6 +95,8 @@ export const DogSearch = () => {
     error: searchDogsError,
   } = useDogsSearch(filters, sorting, currentSearchPage, selectedLocationArea, !showFavoritesOnly);
 
+  // Using `useCallback` to keep a stable reference to `handleSliderChange` function.
+  // This prevents unnecessary re-renders of child components and recreations of dependent memorized values.
   const handleSliderChange = useCallback((value: number[]) => {
     setFilters((prevFilters) => ({ ...prevFilters, ageMin: value[0], ageMax: value[1] }));
   }, []);
@@ -124,6 +149,8 @@ export const DogSearch = () => {
       });
   };
 
+  // Using `useMemo` to derive `filterProps` from other state and props.
+  // This ensures that a new object is only created if one of the dependencies has changed, helping to optimize performance and prevent unnecessary re-renders of child components.
   const filterProps = useMemo(
     () => ({
       searchCount,

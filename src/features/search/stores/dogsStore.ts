@@ -2,28 +2,14 @@ import { create, StateCreator } from 'zustand';
 import { Dog } from '../types';
 
 interface DogsState {
-    // favoriteDogs: Dog[];
     favoriteDogIds: string[];
-    // filters: DogSearchQuery;
-    // sorting: string;
-    // searchCurrentPage: number;
-    // showFavoritesOnly: boolean;
     addFavorite: (dog: Dog) => void;
     removeFavorite: (dogId: string) => void;
     toggleFavorite: (dog: Dog) => void;
-    // toggleFavoritesOnly: () => void;
-    // setFilters: (filters: DogSearchQuery) => void;
-    // setSorting: (sorting: string) => void;
-    // setSearchCurrentPage: (page: number) => void;
 }
 
 const dogsStateCreator: StateCreator<DogsState> = (set) => ({
-    // favoriteDogs: [],
     favoriteDogIds: JSON.parse(localStorage.getItem('favoriteDogs') || '[]'),
-    // filters: initialState,
-    // sorting: 'breed:asc',
-    // searchCurrentPage: 0,
-    // showFavoritesOnly: false,
 
     addFavorite: (dog) => {
         set((state) => {
@@ -53,8 +39,6 @@ const dogsStateCreator: StateCreator<DogsState> = (set) => ({
             return { favoriteDogIds: newFavoriteDogIds };
         })
     },
-    // toggleFavoritesOnly: () =>
-    //   set((state) => ({ showFavoritesOnly: !state.showFavoritesOnly })),
 });
 
 const useDogsStore = create(dogsStateCreator);

@@ -10,9 +10,16 @@ import { ContentLayout } from '@/components/Layout/ContentLayout';
 import useLocationStore from '../stores/locationStore';
 import { useLocationsWithinDistance } from '../hooks/useLocationWithinDistance';
 
+/**
+ * Locator component provides a UI for users to:
+ * - Select a location using state and zip code or city name.
+ * - View selected location and search area on a map.
+ * - Navigate further once a location is selected.
+ */
 const Locator = () => {
   const [map, setMap] = useState<Map | null>(null); // Get leaflet map instance
-
+  
+  // Extract required states and actions from the location store
   const { selectedLocation, setSelectedLocationArea, selectedLocationArea, searchDistance } = useLocationStore((state) => ({
     selectedLocation: state.selectedLocation,
     searchDistance: state.searchDistance,
@@ -20,6 +27,7 @@ const Locator = () => {
     selectedLocationArea: state.selectedLocationArea,
   }));
 
+  // Fetch locations within a certain distance
   const { isLoading: isLoadingLocationsWithinDist } = useLocationsWithinDistance({
     location: selectedLocation,
     distance: searchDistance,
@@ -27,6 +35,7 @@ const Locator = () => {
 
   const navigate = useNavigate();
 
+  // Adjust map view to fit the selected location area when it's updated
   useEffect(() => {
     if (!selectedLocationArea) return;
     if (map) {

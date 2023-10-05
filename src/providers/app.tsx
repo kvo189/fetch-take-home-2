@@ -23,6 +23,20 @@ type AppProviderProps = {
   children: React.ReactNode;
 };
 
+/**
+ * AppProvider Component
+ * 
+ * - Provides essential contexts and error handling for the application.
+ * - Includes:
+ *   - Chakra UI theming and styling.
+ *   - Data fetching with `react-query`.
+ *   - Error boundary for top-level errors with a fallback UI.
+ *   - Async component loading via Suspense with a loading state.
+ *   - SEO management with `react-helmet-async`.
+ *   - History-based routing with `react-router-dom`.
+ * 
+ * @param {React.ReactNode} children - React components to be wrapped with the providers.
+ */
 export const AppProvider = ({ children }: AppProviderProps) => {
   return (
     <QueryClientProvider client={queryClient}>

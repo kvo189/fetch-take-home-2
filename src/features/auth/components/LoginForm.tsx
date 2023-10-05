@@ -5,7 +5,17 @@ import { loginWithNameAndEmail } from '../api/authService';
 type LoginFormProps = {
   onSuccess: () => void;
 };
-
+/**
+ * Allows users to log in using their name and email.
+ * Features:
+ * - "Remember me" option to save credentials in local storage.
+ * - Uses `loginWithNameAndEmail` API function for authentication.
+ * - Displays a toast message on login error.
+ * - Calls the `onSuccess` prop on successful login.
+ * 
+ * Props:
+ * - `onSuccess`: Callback executed after successful login.
+ */
 export const LoginForm = ({ onSuccess }: LoginFormProps) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

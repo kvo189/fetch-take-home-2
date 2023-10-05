@@ -6,7 +6,18 @@ type LayoutProps = {
   title: string;
   heading: string;
 };
-
+/**
+ * Layout Component.
+ * 
+ * A flexible layout structure to wrap content in. Uses Chakra UI for styling.
+ * - Contains a heading at the top, followed by children content.
+ * - Configurable title and heading.
+ * 
+ * Props:
+ * - `children`: Content inside the layout.
+ * - `title`: Title for the Head component.
+ * - `heading`: Text for the heading of the layout.
+ */
 export const Layout = ({ title, children, heading }: LayoutProps) => {
   return (
     <>
